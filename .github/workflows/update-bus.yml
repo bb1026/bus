@@ -10,38 +10,45 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      # 拉取仓库
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           persist-credentials: false # 使用自定义 token 推送
 
+      # 安装 Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # 安装依赖
       - name: Install dependencies
         run: npm install node-fetch@2
 
+      # 执行脚本更新 bus 数据
       - name: Fetch LTA bus data
         run: node script.js
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
 
+      # 配置 Git
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      # 提交并推送更新
       - name: Commit & Push updates
         run: |
           git add json/*.json
+          echo "Current branch: $(git branch --show-current)"
           if git diff --cached --quiet; then
             echo "No changes detected, skipping commit."
           else
             git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
-            git push https://${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+            git push -u https://${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
           fi
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
