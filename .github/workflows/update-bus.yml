@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false # 使用自定义 token 推送
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -35,8 +37,11 @@ jobs:
       - name: Commit & Push updates
         run: |
           git add json/*.json
-          # 只有有变化才提交
-          git diff --cached --quiet || git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
-          git diff --cached --quiet || git push
+          if git diff --cached --quiet; then
+            echo "No changes detected, skipping commit."
+          else
+            git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
+            git push https://${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+          fi
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
