@@ -1,0 +1,36 @@
+name: Update Bus Data
+
+on:
+  schedule:
+    # 每个月 1 号凌晨 3 点（新加坡时间 +08:00，大约 UTC 19:00 前一天）
+    - cron: '0 19 28 * *'
+  workflow_dispatch: # 允许手动运行
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install node-fetch@2
+
+      - name: Run script to fetch LTA API data
+        run: node script.js
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add js/*.json
+          git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
+          git push
