@@ -24,13 +24,13 @@ jobs:
       - name: Run script to fetch LTA API data
         run: node script.js
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
 
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add js/*.json
+          git add json/*.json
           git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
           git push
