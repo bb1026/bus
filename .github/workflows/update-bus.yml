@@ -24,7 +24,7 @@ jobs:
       - name: Run script to fetch LTA API data
         run: node script.js
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
 
       - name: Commit and push changes
