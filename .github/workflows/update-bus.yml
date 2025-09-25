@@ -27,12 +27,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
 
-      - name: Commit & Push updates
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit & Push updates
+        run: |
           git add json/*.json
-          git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
-          git push
+          # 只有有变化才提交
+          git diff --cached --quiet || git commit -m "Update bus data [$(date +'%Y-%m-%d')]"
+          git diff --cached --quiet || git push
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
