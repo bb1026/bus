@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公交数据查看</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+<style>
+  body { font-family: Arial, sans-serif; padding: 10px; margin: 0; background: #f5f5f5; }
+  h2 { text-align: center; margin-bottom: 20px; }
+  .api-container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+  .api-card { background: #fff; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
+  .update-time { margin-top:5px; font-size:12px; color:#666; }
+  @media (max-width: 600px) { .api-card { width: 90%; } }
+</style>
+</head>
+<body>
+
+<h2><i class="fas fa-bus"></i> 公交数据查看</h2>
+<div class="api-container" id="apiContainer"></div>
+
+<script>
+const apiFiles = ["busRoutes","busServices","busStops"];
+const container = document.getElementById("apiContainer");
+
+apiFiles.forEach(file=>{
+  const card = document.createElement("div");
+  card.className = "api-card";
+  card.innerHTML = `<strong>${file}</strong><div class="update-time">上次更新时间: --</div>`;
+  
+  container.appendChild(card);
+
+  fetch(`json/${file}.json`)
+    .then(r=>r.json())
+    .then(data=>{
+      const timeDiv = card.querySelector(".update-time");
+      const now = new Date();
+      timeDiv.innerText = `上次更新时间: ${now.toLocaleString()}\n记录数: ${data.length}`;
+    })
+    .catch(err=>{
+      const timeDiv = card.querySelector(".update-time");
+      timeDiv.innerText = `加载失败: ${err}`;
+    });
+});
+</script>
+
+</body>
+</html>
