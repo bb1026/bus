@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    // 拦截 /busarrival 请求
+    // /busarrival 接口返回 JSON 数据
     if (pathname.startsWith("/busarrival")) {
       const busStopCode = url.searchParams.get("BusStopCode");
       if (!busStopCode) {
@@ -18,8 +18,8 @@ export default {
           `https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival?BusStopCode=${busStopCode}`,
           {
             headers: {
-              "AccountKey": env.LTA_API_KEY,
-              Accept: "application/json",
+              "AccountKey": env.LTA_API_KEY,  // Worker Secret 中的 LTA Key
+              "Accept": "application/json",
             },
           }
         );
@@ -35,7 +35,9 @@ export default {
       }
     }
 
-    // 非 /busarrival 请求，直接转发到 Pages 主页
-    return fetch(request);
+    // 根路径或者其他路径返回简单提示
+    return new Response(JSON.stringify({ message: "Bus Arrival API Worker" }), {
+      headers: { "Content-Type": "application/json" },
+    });
   },
 };
