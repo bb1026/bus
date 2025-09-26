@@ -3,6 +3,7 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    // 拦截 /busarrival 请求
     if (pathname.startsWith("/busarrival")) {
       const busStopCode = url.searchParams.get("BusStopCode");
       if (!busStopCode) {
@@ -34,15 +35,7 @@ export default {
       }
     }
 
-    if (pathname === "/" || pathname === "/index.html") {
-      const html = await fetch(
-        "https://raw.githubusercontent.com/bb1026/bus/main/index.html"
-      ).then((r) => r.text());
-      return new Response(html, {
-        headers: { "Content-Type": "text/html;charset=UTF-8" },
-      });
-    }
-
-    return Response.redirect("https://bus.0515364.xyz/", 302);
+    // 非 /busarrival 请求，直接转发到 Pages 主页
+    return fetch(request);
   },
 };
