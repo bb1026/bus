@@ -1,13 +1,13 @@
 name = "bus-arrival-worker"
+main = "workers/bus-arrival-worker.js"
 type = "modules"
 account_id = "4796a78c1804791b739f97bb336bab79"
 zone_id = "df09b3a563bde936907cc7c4a710f942"
-workers_dev = true
-route = ""                       # workers.dev 自动生成域名，不需要设置
 compatibility_date = "2025-09-26"
 
 [env.production]
-LTA_API_KEY = "$LTA_API_KEY"    # GitHub Secrets 注入 LTA Key
+workers_dev = true
+route = ""
 
 [observability.logs]
 enabled = true
