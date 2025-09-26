@@ -29,5 +29,5 @@ jobs:
         working-directory: workers
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          LTA_API_KEY_BUS: ${{ secrets.LTA_API_KEY }}
+          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
         run: npx wrangler deploy
