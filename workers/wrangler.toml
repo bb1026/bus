@@ -6,7 +6,7 @@ compatibility_date = "2025-09-26"
 
 [env.production]
 workers_dev = true
-route = ""   # 如果使用 workers.dev，留空即可
+route = "bus.0515364.xyz/busarrival/*"
 
 [observability.logs]
 enabled = true
