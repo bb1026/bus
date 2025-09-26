@@ -3,45 +3,255 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>公交数据查看</title>
+<title>公交站查询与收藏</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
 <style>
-  body { font-family: Arial, sans-serif; padding: 10px; margin: 0; background: #f5f5f5; }
-  h2 { text-align: center; margin-bottom: 20px; }
-  .api-container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
-  .api-card { background: #fff; padding: 15px; border-radius: 8px; width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
-  .update-time { margin-top:5px; font-size:12px; color:#666; }
-  @media (max-width: 600px) { .api-card { width: 90%; } }
+body { font-family: Arial, sans-serif; margin:0; padding:10px; background:#f5f5f5; }
+h2 { text-align:center; margin-bottom:10px; }
+.controls { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:10px; }
+input, button { padding:6px 10px; font-size:14px; border-radius:5px; border:1px solid #ccc; }
+button { cursor:pointer; background:#007bff; color:#fff; border:none; display:flex; align-items:center; gap:5px; }
+button:hover { background:#0056b3; }
+.busstop-container { display:flex; flex-direction:column; }
+.busstop-card { background:#fff; padding:15px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+.busstop-header { cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+.busstop-header h3 { margin:0; font-size:18px; }
+.busstop-header p { margin:2px 0; color:#666; font-size:14px; }
+.bus-list { display:none; flex-direction:column; }
+.bus-list.show { display:flex; }
+.bus-item { display:flex; justify-content:space-between; align-items:center; padding:8px; background:#f9f9f9; border-top:1px solid #ddd; }
+.star { cursor:pointer; font-size:26px; color:#ffcc00; }
+.star.unfilled { color:#ccc; }
+.favorite-section { margin-bottom:15px; }
+#backBtn { display:none; margin:10px auto; }
+.expand-icon { transition: transform 0.3s; }
+.expand-icon.expanded { transform: rotate(180deg); }
+.loading { text-align:center; padding:20px; color:#666; }
 </style>
 </head>
 <body>
 
-<h2><i class="fas fa-bus"></i> 公交数据查看</h2>
-<div class="api-container" id="apiContainer"></div>
+<h2><i class="fas fa-bus"></i> 公交站查询与收藏</h2>
+
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="输入巴士站号或巴士号">
+  <button id="searchBtn"><i class="fas fa-search"></i> 查询</button>
+  <button id="refreshBtn"><i class="fas fa-location-crosshairs"></i> 刷新位置</button>
+</div>
+
+<button id="backBtn"><i class="fas fa-arrow-left"></i> 返回</button>
+
+<div class="favorite-section" id="favoriteSection"></div>
+<div class="busstop-container" id="busstopContainer"></div>
 
 <script>
-const apiFiles = ["busRoutes","busServices","busStops"];
-const container = document.getElementById("apiContainer");
+const BUS_STOPS_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busStops.json";
+const ACCOUNT_KEY = "XXPgdr5QSdiFeDNhghGGrw==";
 
-apiFiles.forEach(file=>{
-  const card = document.createElement("div");
-  card.className = "api-card";
-  card.innerHTML = `<strong>${file}</strong><div class="update-time">上次更新时间: --</div>`;
-  
-  container.appendChild(card);
+let busStops = [];
+let userPosition = null;
+let favoriteBuses = JSON.parse(localStorage.getItem('favoriteBuses') || '[]');
+let lastView = "nearby";
 
-  fetch(`json/${file}.json`)
-    .then(r=>r.json())
-    .then(data=>{
-      const timeDiv = card.querySelector(".update-time");
-      const now = new Date();
-      timeDiv.innerText = `上次更新时间: ${now.toLocaleString()}\n记录数: ${data.length}`;
-    })
-    .catch(err=>{
-      const timeDiv = card.querySelector(".update-time");
-      timeDiv.innerText = `加载失败: ${err}`;
+function saveFavorites(){ localStorage.setItem('favoriteBuses', JSON.stringify(favoriteBuses)); }
+
+function haversine(lat1, lon1, lat2, lon2){
+    const R = 6371000;
+    const toRad = x => x * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function loadBusStops(){
+    try {
+        const res = await fetch(BUS_STOPS_URL);
+        busStops = await res.json();
+    } catch(e){
+        console.error("加载巴士站失败", e);
+        document.getElementById('busstopContainer').innerHTML='<div class="loading">加载巴士站失败</div>';
+    }
+}
+
+// 获取指定巴士站的实时到站信息
+async function getNextBuses(busStopCode){
+    try{
+        const resp = await fetch(`https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival?BusStopCode=${busStopCode}`, {
+            headers: {"AccountKey": ACCOUNT_KEY, "accept": "application/json"}
+        });
+        const data = await resp.json();
+        if(!data.Services) return [];
+        return data.Services.map(svc=>{
+            const est = (bus) => {
+                if(!bus || !bus.EstimatedArrival) return '--';
+                const diff = new Date(bus.EstimatedArrival) - new Date();
+                return diff>0 ? Math.ceil(diff/60000) : 0;
+            };
+            return {
+                ServiceNo: svc.ServiceNo,
+                Operator: svc.Operator,
+                ArrivalMinutes: [est(svc.NextBus), est(svc.NextBus2), est(svc.NextBus3)]
+            };
+        });
+    } catch(e){
+        console.error("获取巴士时间失败", e);
+        return [];
+    }
+}
+
+function getNearbyBusStops(){
+    if(!userPosition) return [];
+    return busStops.map(bs=>{
+        const dist = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
+        return {...bs, distance: dist};
+    }).filter(bs=>bs.distance<=500).sort((a,b)=>a.distance-b.distance);
+}
+
+function toggleFavorite(busStopCode, bus){
+    const idx = favoriteBuses.findIndex(f=>f.BusStopCode===busStopCode && f.bus.ServiceNo===bus.ServiceNo);
+    if(idx>=0) favoriteBuses.splice(idx,1);
+    else favoriteBuses.push({BusStopCode:busStopCode, bus});
+    saveFavorites();
+    renderFavoritesNoCollapse();
+}
+
+async function renderFavoritesNoCollapse(){
+    const section = document.getElementById('favoriteSection');
+    section.innerHTML='<h3>我的收藏</h3>';
+    if(favoriteBuses.length===0){
+        section.innerHTML+='<div class="busstop-card"><p>暂无收藏</p></div>';
+        return;
+    }
+
+    const grouped = {};
+    favoriteBuses.forEach(f=>{
+        if(!grouped[f.BusStopCode]) grouped[f.BusStopCode]=[];
+        grouped[f.BusStopCode].push(f.bus);
     });
-});
+
+    for(const stopCode of Object.keys(grouped)){
+        const bs = busStops.find(b=>b.BusStopCode===stopCode);
+        if(!bs) continue;
+        const distance = userPosition ? Math.round(haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude)) : 0;
+
+        const card = document.createElement('div');
+        card.className='busstop-card';
+        card.innerHTML = `<div class="busstop-header">
+            <div>
+                <h3>${bs.Description}</h3>
+                <p>${bs.BusStopCode} ${distance}m ${bs.RoadName}</p>
+            </div>
+            <i class="fas fa-chevron-down expand-icon expanded"></i>
+        </div>
+        <div class="bus-list show"></div>`;
+
+        section.appendChild(card);
+        const listDiv = card.querySelector('.bus-list');
+
+        const buses = await getNextBuses(bs.BusStopCode);
+        if(buses.length===0){
+            listDiv.innerHTML='<div class="bus-item"><span>暂无巴士信息</span></div>';
+        } else {
+            buses.forEach(nb=>{
+                const isFav = favoriteBuses.some(f=>f.BusStopCode===bs.BusStopCode && f.bus.ServiceNo===nb.ServiceNo);
+                const busDiv = document.createElement('div');
+                busDiv.className='bus-item';
+                busDiv.innerHTML=`<span>${nb.ServiceNo} ${nb.ArrivalMinutes[0]}分钟, ${nb.ArrivalMinutes[1]}分钟, ${nb.ArrivalMinutes[2]}分钟</span>
+                    <span class="star ${isFav?'':'unfilled'}" data-bus="${nb.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>`;
+                listDiv.appendChild(busDiv);
+
+                busDiv.querySelector('.star').onclick = e => { e.stopPropagation(); toggleFavorite(bs.BusStopCode, nb); };
+            });
+        }
+
+        card.querySelector('.busstop-header').onclick=()=>{ listDiv.classList.toggle('show'); card.querySelector('.expand-icon').classList.toggle('expanded'); };
+    }
+}
+
+async function renderBusStops(stops){
+    const container = document.getElementById('busstopContainer');
+    container.innerHTML='';
+    for(const bs of stops){
+        const card = document.createElement('div');
+        card.className='busstop-card';
+        card.innerHTML=`<div class="busstop-header">
+            <div>
+                <h3>${bs.Description}</h3>
+                <p>${bs.BusStopCode} ${Math.round(bs.distance)}m ${bs.RoadName}</p>
+            </div>
+            <i class="fas fa-chevron-down expand-icon"></i>
+        </div>
+        <div class="bus-list"></div>`;
+        container.appendChild(card);
+        const listDiv = card.querySelector('.bus-list');
+
+        const buses = await getNextBuses(bs.BusStopCode);
+        if(buses.length===0){
+            listDiv.innerHTML='<div class="bus-item"><span>暂无巴士信息</span></div>';
+        } else {
+            buses.forEach(nb=>{
+                const isFav = favoriteBuses.some(f=>f.BusStopCode===bs.BusStopCode && f.bus.ServiceNo===nb.ServiceNo);
+                const busDiv = document.createElement('div');
+                busDiv.className='bus-item';
+                busDiv.innerHTML=`<span>${nb.ServiceNo} ${nb.ArrivalMinutes[0]}分钟, ${nb.ArrivalMinutes[1]}分钟, ${nb.ArrivalMinutes[2]}分钟</span>
+                    <span class="star ${isFav?'':'unfilled'}" data-bus="${nb.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>`;
+                listDiv.appendChild(busDiv);
+
+                busDiv.querySelector('.star').onclick = e => { e.stopPropagation(); toggleFavorite(bs.BusStopCode, nb); };
+            });
+        }
+
+        card.querySelector('.busstop-header').onclick=()=>{ listDiv.classList.toggle('show'); card.querySelector('.expand-icon').classList.toggle('expanded'); };
+    }
+}
+
+// 搜索
+document.getElementById('searchBtn').onclick=async ()=>{
+    const val = document.getElementById('searchInput').value.trim();
+    if(!val) return renderBusStops(getNearbyBusStops());
+    if(/^\d{5}$/.test(val)){
+        lastView="nearby";
+        const filtered = busStops.filter(b=>b.BusStopCode.includes(val)).map(bs=>{
+            const dist = userPosition ? haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude):0;
+            return {...bs,distance:dist};
+        });
+        await renderBusStops(filtered);
+        document.getElementById('backBtn').style.display='block';
+    } else {
+        alert("请输入5位巴士站号码查询"); // 可自行改成页面提示
+    }
+};
+
+// 刷新位置
+document.getElementById('refreshBtn').onclick=()=>{
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(async pos=>{
+            userPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
+            lastView="nearby";
+            await renderBusStops(getNearbyBusStops());
+            await renderFavoritesNoCollapse();
+            document.getElementById('backBtn').style.display='none';
+        });
+    }
+};
+
+document.getElementById('backBtn').onclick=()=>{
+    if(lastView==="nearby") renderBusStops(getNearbyBusStops());
+    document.getElementById('backBtn').style.display='none';
+};
+
+(async function(){
+    document.getElementById('busstopContainer').innerHTML='<div class="loading">正在加载巴士站数据...</div>';
+    await loadBusStops();
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(async pos=>{
+            userPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
+            await renderBusStops(getNearbyBusStops());
+            await renderFavoritesNoCollapse();
+        });
+    }
+})();
 </script>
 
 </body>
