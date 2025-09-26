@@ -1,5 +1,5 @@
 name = "bus-arrival-worker"
-main = "workers/bus-arrival-worker.js"   # worker 文件路径
+main = "bus-arrival-worker.js"
 type = "modules"
 account_id = "4796a78c1804791b739f97bb336bab79"
 compatibility_date = "2025-09-26"
