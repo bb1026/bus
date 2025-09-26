@@ -25,4 +25,4 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           LTA_API_KEY_BUS: ${{ secrets.LTA_API_KEY }}
-        run: wrangler publish --env production
+        run: npx wrangler deploy
