@@ -1,6 +1,6 @@
-name = "bus-arrival-worker"        # Worker 名称
-type = "modules"                   # 使用 ES Module
-account_id = "4796a78c1804791b739f97bb336bab79"  # 你的 Cloudflare 账号 ID
-workers_dev = true                 # 使用 workers.dev 子域名
-route = ""                         # 使用 workers.dev 访问，留空
-compatibility_date = "2025-09-26" # 兼容日期，推荐当天日期
+name = "bus-arrival-worker"
+type = "modules"
+account_id = "4796a78c1804791b739f97bb336bab79" 
+workers_dev = true
+route = ""
+compatibility_date = "2025-09-26"
