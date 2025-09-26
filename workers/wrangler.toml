@@ -1,13 +1,12 @@
 name = "bus-arrival-worker"
-main = "workers/bus-arrival-worker.js"
+main = "workers/bus-arrival-worker.js"   # worker 文件路径
 type = "modules"
 account_id = "4796a78c1804791b739f97bb336bab79"
-zone_id = "df09b3a563bde936907cc7c4a710f942"
 compatibility_date = "2025-09-26"
 
 [env.production]
 workers_dev = true
-route = ""
+route = ""   # 如果使用 workers.dev，留空即可
 
 [observability.logs]
 enabled = true
