@@ -30,7 +30,7 @@ jobs:
 
       # 4. 上传 LTA Key 到 Worker Secret
       - name: Upload LTA Secret
-        run: echo "${{ secrets.LTA_API_KEY }}" | wrangler secret put LTA_API_KEY --env production
+        run: echo "${{ secrets.LTA_API_KEY }}" | wrangler secret put LTA_API_KEY
         working-directory: workers
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -40,4 +40,4 @@ jobs:
         working-directory: workers
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: npx wrangler deploy --env production
+        run: npx wrangler deploy
