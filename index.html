@@ -2,118 +2,370 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>公交站测试</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公交站查询与收藏</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
 <style>
-body { font-family: Arial, sans-serif; padding:20px; }
-.bus-item { padding:10px; margin:5px; background:#f0f0f0; border-radius:5px; }
-.error { color: red; }
-.success { color: green; }
+/* 样式保持不变 */
+body { font-family: Arial, sans-serif; margin:0; padding:10px; background:#f5f5f5; }
+h2 { text-align:center; margin-bottom:10px; }
+.controls { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:10px; }
+input, button { padding:6px 10px; font-size:14px; border-radius:5px; border:1px solid #ccc; }
+button { cursor:pointer; background:#007bff; color:#fff; border:none; display:flex; align-items:center; gap:5px; }
+button:hover { background:#0056b3; }
+.busstop-container { display:flex; flex-direction:column; }
+.busstop-card { background:#fff; padding:15px; border-radius:8px; margin-bottom:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+.busstop-header { cursor:pointer; }
+.busstop-header h3 { margin:0; font-size:18px; }
+.busstop-header p { margin:2px 0; color:#666; font-size:14px; }
+.separator { border-top:1px solid #ccc; margin:8px 0; display:none; }
+.bus-list { display:none; flex-direction:column; }
+.bus-list.show { display:flex; }
+.bus-list.show + .separator { display:block; }
+.bus-item { display:flex; justify-content:space-between; align-items:center; padding:8px; background:#f9f9f9; border-top:1px solid #ddd; }
+.star { cursor:pointer; font-size:26px; color:#ffcc00; }
+.star.unfilled { color:#ccc; }
+.favorite-section { margin-bottom:15px; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+.modal-content { background:#fff; padding:20px; border-radius:10px; width:90%; max-width:500px; max-height:90%; overflow:auto; }
+.modal-close { float:right; cursor:pointer; font-size:18px; }
+.tab { display:flex; justify-content:center; gap:10px; margin-top:10px; }
+.tab button { flex:1; text-align:center; }
+.tab-content { display:none; margin-top:10px; }
+.tab-content.active { display:block; }
+.route-map { margin-top:10px; font-size:15px; }
+.route-stop { display:flex; align-items:flex-start; margin-bottom:5px; cursor:pointer; }
+.route-line { width:20px; display:flex; flex-direction:column; align-items:center; }
+.route-circle { width:10px; height:10px; border-radius:50%; background:#007bff; }
+.route-connector { flex:1; width:2px; background:#007bff; }
+.route-text { margin-left:8px; }
+.op-table { border-collapse: collapse; margin-top:5px; font-size:14px; }
+.op-table th, .op-table td { border:1px solid #ccc; padding:3px 8px; text-align:center; }
+.op-table td:first-child { text-align:left; }
+#backBtn { display:none; margin:10px auto; }
 </style>
 </head>
 <body>
 
-<h2>巴士站 API 测试</h2>
-<div id="results"></div>
+<h2><i class="fas fa-bus"></i> 公交站查询与收藏</h2>
+
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="输入巴士站号或巴士号">
+  <button id="searchBtn"><i class="fas fa-search"></i> 查询</button>
+  <button id="refreshBtn"><i class="fas fa-location-crosshairs"></i> 刷新位置</button>
+</div>
+
+<button id="backBtn"><i class="fas fa-arrow-left"></i> 返回</button>
+
+<div class="favorite-section" id="favoriteSection"></div>
+<div class="busstop-container" id="busstopContainer"></div>
+
+<!-- 弹窗 -->
+<div class="modal" id="busModal">
+  <div class="modal-content">
+    <span class="modal-close" id="modalClose">&times;</span>
+    <h3 id="modalBusNo"></h3>
+    <div class="tab" id="modalTabs"></div>
+    <div id="modalTabContents"></div>
+  </div>
+</div>
 
 <script>
-async function testAPIs() {
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '<p>开始测试...</p>';
-  
-  const testCases = [
-    {
-      name: "直接API调用",
-      url: "https://busapi.0515364.xyz/busarrival?BusStopCode=59241"
-    },
-    {
-      name: "使用CORS代理",
-      url: "https://cors-anywhere.herokuapp.com/https://busapi.0515364.xyz/busarrival?BusStopCode=59241"
-    },
-    {
-      name: "JSONP方式测试",
-      url: "https://busapi.0515364.xyz/busarrival?BusStopCode=59241&callback=testCallback"
-    }
-  ];
-  
-  for (const testCase of testCases) {
-    try {
-      resultsDiv.innerHTML += `<p>测试: ${testCase.name}...</p>`;
+const BUS_STOPS_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busStops.json";
+const BUS_ROUTES_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busRoutes.json";
+const BUS_SERVICES_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busServices.json";
+
+let busStops=[], busRoutes=[], busServices=[];
+let userPosition=null;
+let favoriteBuses=JSON.parse(localStorage.getItem('favoriteBuses')||'[]');
+let lastView="nearby";
+
+let expandedStops = new Set(); // 已展开的巴士站
+let arrivalCache = {}; // 缓存到站信息
+
+function saveFavorites(){ localStorage.setItem('favoriteBuses',JSON.stringify(favoriteBuses)); }
+
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+async function loadData(){
+  [busStops,busRoutes,busServices]=await Promise.all([
+    fetch(BUS_STOPS_URL).then(r=>r.json()),
+    fetch(BUS_ROUTES_URL).then(r=>r.json()),
+    fetch(BUS_SERVICES_URL).then(r=>r.json())
+  ]);
+}
+
+// 获取下一班车基本信息
+function getNextBuses(busStopCode){
+  const buses=busRoutes.filter(r=>r.BusStopCode===busStopCode);
+  return buses.map(b=>{
+    const svc=busServices.find(s=>s.ServiceNo===b.ServiceNo&&s.Direction===b.Direction);
+    const destStop=busStops.find(bs=>bs.BusStopCode===(svc?svc.DestinationCode:b.DestinationCode));
+    const originStop=busStops.find(bs=>bs.BusStopCode===(svc?svc.OriginCode:b.BusStopCode));
+    return {
+      ServiceNo:b.ServiceNo,
+      Operator:b.Operator,
+      Direction:b.Direction,
+      Origin:originStop?`${originStop.Description} (${originStop.BusStopCode})`:`${b.BusStopCode}`,
+      Destination:destStop?`${destStop.Description} (${destStop.BusStopCode})`:`${b.DestinationCode}`,
+    };
+  });
+}
+
+function getNearbyBusStops(){
+  if(!userPosition) return [];
+  return busStops.map(bs=>{
+    const dist=haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude);
+    return {...bs,distance:dist};
+  }).filter(bs=>bs.distance<=500).sort((a,b)=>a.distance-b.distance);
+}
+
+// 切换收藏
+function toggleFavorite(busStopCode, bus){
+  const idx = favoriteBuses.findIndex(f=>f.BusStopCode===busStopCode && f.bus.ServiceNo===bus.ServiceNo);
+  if(idx>=0){ favoriteBuses.splice(idx,1); } 
+  else { favoriteBuses.push({BusStopCode:busStopCode,bus}); }
+  saveFavorites();
+  renderFavoritesNoCollapse();
+}
+
+// 获取到站时间 - 修复API端点
+async function fetchArrival(busStopCode){
+  try{
+    // 使用新的API端点
+    const res = await fetch(`https://busapi.0515364.xyz/busarrival?BusStopCode=${busStopCode}`);
+    const data = await res.json();
+    if(data.Services) arrivalCache[busStopCode] = data.Services;
+  }catch(e){ console.error(e); }
+}
+
+function getMinutesFromNow(isoTime){
+  if(!isoTime) return '--';
+  const diff=(new Date(isoTime)-new Date())/60000;
+  return diff<0?0:Math.round(diff);
+}
+
+// 更新时间显示 - 修复时间显示逻辑
+function updateArrivalTimes(){
+  document.querySelectorAll('.bus-item').forEach(div=>{
+    const stopCode = div.querySelector('.star').dataset.stop;
+    const busNo = div.querySelector('.star').dataset.bus;
+    const service = arrivalCache[stopCode]?.find(s=>s.ServiceNo===busNo);
+    
+    if(service){
+      const next = getMinutesFromNow(service.NextBus?.EstimatedArrival);
+      const next2 = getMinutesFromNow(service.NextBus2?.EstimatedArrival);
+      const next3 = getMinutesFromNow(service.NextBus3?.EstimatedArrival);
+      const destText = div.querySelector('span').dataset.dest;
       
-      if (testCase.name === "JSONP方式测试") {
-        // JSONP测试
-        window.testCallback = function(data) {
-          resultsDiv.innerHTML += `<p class="success">${testCase.name}: JSONP成功</p>`;
-          console.log('JSONP数据:', data);
-        };
-        
-        const script = document.createElement('script');
-        script.src = testCase.url;
-        document.head.appendChild(script);
-        
-        // 设置超时
-        setTimeout(() => {
-          if (!script.parentNode) return;
-          script.parentNode.removeChild(script);
-          resultsDiv.innerHTML += `<p class="error">${testCase.name}: JSONP超时</p>`;
-        }, 5000);
-        
+      // 更新显示格式
+      div.querySelector('span').innerHTML = `
+        ${busNo} ${next}分钟<br>
+        →${destText} ${next2}分钟 ${next3}分钟
+      `;
+    }
+  });
+}
+
+// 定时刷新已展开和收藏的站点
+async function refreshAll(){
+  const stopsToFetch = new Set([...expandedStops]);
+  favoriteBuses.forEach(f=>stopsToFetch.add(f.BusStopCode));
+  
+  for(const stop of stopsToFetch){
+    await fetchArrival(stop);
+  }
+  updateArrivalTimes();
+}
+
+// 启动定时刷新
+setInterval(refreshAll, 5000);
+
+// 渲染收藏（卡片保持展开）
+function renderFavoritesNoCollapse(){
+  const section=document.getElementById('favoriteSection');
+  section.innerHTML='<h3>我的收藏</h3>';
+  if(favoriteBuses.length===0){
+    const empty=document.createElement('div'); empty.className='busstop-card';
+    empty.innerHTML='<p>暂无收藏</p>'; section.appendChild(empty); return;
+  }
+  
+  const grouped={};
+  favoriteBuses.forEach(f=>{ 
+    if(!grouped[f.BusStopCode]) grouped[f.BusStopCode]=[]; 
+    grouped[f.BusStopCode].push(f.bus); 
+  });
+  
+  Object.keys(grouped).forEach(stopCode=>{
+    const bs=busStops.find(b=>b.BusStopCode===stopCode); 
+    if(!bs) return;
+    
+    const distance=userPosition?Math.round(haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude)):0;
+    const card=document.createElement('div'); card.className='busstop-card';
+    card.innerHTML=`
+      <div class="busstop-header">
+        <h3>${bs.Description}</h3>
+        <p>${bs.BusStopCode} ${distance}m ${bs.RoadName}</p>
+      </div>
+      <div class="separator"></div>
+      <div class="bus-list show"></div>
+    `;
+    
+    const listDiv=card.querySelector('.bus-list');
+    grouped[stopCode].forEach(nb=>{
+      const busDiv=document.createElement('div'); busDiv.className='bus-item';
+      busDiv.innerHTML=`
+        <span data-dest="${nb.Destination}">
+          ${nb.ServiceNo} --分钟<br>
+          →${nb.Destination} --分钟 --分钟
+        </span>
+        <span class="star" data-bus="${nb.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
+      `;
+      listDiv.appendChild(busDiv);
+      
+      busDiv.querySelector('.star').onclick=e=>{ 
+        e.stopPropagation(); 
+        toggleFavorite(bs.BusStopCode, nb); 
+      };
+    });
+    section.appendChild(card);
+  });
+  
+  // 获取收藏夹的实时数据
+  Object.keys(grouped).forEach(stopCode => {
+    fetchArrival(stopCode).then(() => updateArrivalTimes());
+  });
+}
+
+// 渲染附近或搜索结果
+function renderBusStops(stops,autoExpandAll=false){
+  const container=document.getElementById('busstopContainer'); container.innerHTML='';
+  stops.forEach(bs=>{
+    const card=document.createElement('div'); card.className='busstop-card';
+    card.innerHTML=`
+      <div class="busstop-header">
+        <h3>${bs.Description}</h3>
+        <p>${bs.BusStopCode} ${Math.round(bs.distance)}m ${bs.RoadName}</p>
+      </div>
+      <div class="separator"></div>
+      <div class="bus-list"></div>
+    `;
+    container.appendChild(card);
+    
+    const listDiv=card.querySelector('.bus-list');
+    const buses=getNextBuses(bs.BusStopCode);
+    
+    buses.forEach(nb=>{
+      const busDiv=document.createElement('div'); busDiv.className='bus-item';
+      busDiv.innerHTML=`
+        <span data-dest="${nb.Destination}">
+          ${nb.ServiceNo} --分钟<br>
+          →${nb.Destination} --分钟 --分钟
+        </span>
+        <span class="star ${favoriteBuses.some(f=>f.BusStopCode===bs.BusStopCode && f.bus.ServiceNo===nb.ServiceNo)?'':'unfilled'}" 
+              data-bus="${nb.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
+      `;
+      listDiv.appendChild(busDiv);
+      
+      busDiv.querySelector('.star').onclick=e=>{ 
+        e.stopPropagation(); 
+        toggleFavorite(bs.BusStopCode, nb); 
+      };
+      busDiv.onclick=()=>{ lastView="nearby"; showBusModal(nb); };
+    });
+    
+    card.querySelector('.busstop-header').onclick=async ()=>{
+      listDiv.classList.toggle('show');
+      if(listDiv.classList.contains('show')){
+        expandedStops.add(bs.BusStopCode);
+        await fetchArrival(bs.BusStopCode);
+        updateArrivalTimes();
       } else {
-        // 普通fetch测试
-        const response = await fetch(testCase.url, {
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          resultsDiv.innerHTML += `<p class="success">${testCase.name}: 成功 - 状态 ${response.status}</p>`;
-          console.log(`${testCase.name}数据:`, data);
-        } else {
-          resultsDiv.innerHTML += `<p class="error">${testCase.name}: 失败 - 状态 ${response.status}</p>`;
-        }
+        expandedStops.delete(bs.BusStopCode);
       }
-      
-    } catch (error) {
-      resultsDiv.innerHTML += `<p class="error">${testCase.name}: 错误 - ${error.message}</p>`;
-      console.error(`${testCase.name}错误:`, error);
+    };
+    
+    if(autoExpandAll) {
+      listDiv.classList.add('show');
+      expandedStops.add(bs.BusStopCode);
     }
+  });
+  
+  // 获取已展开站点的实时数据
+  if(autoExpandAll) {
+    stops.forEach(bs => {
+      fetchArrival(bs.BusStopCode).then(() => updateArrivalTimes());
+    });
   }
 }
 
-// 测试网络连通性
-async function testConnectivity() {
-  const resultsDiv = document.getElementById('results');
-  
-  // 测试基本网络
-  try {
-    await fetch('https://httpbin.org/get');
-    resultsDiv.innerHTML += '<p class="success">网络连接正常</p>';
-  } catch (error) {
-    resultsDiv.innerHTML += '<p class="error">网络连接失败</p>';
+// 弹窗、搜索、刷新逻辑
+document.getElementById('modalClose').onclick=()=>{document.getElementById('busModal').style.display='none';};
+document.getElementById('searchBtn').onclick=()=>{
+  const val=document.getElementById('searchInput').value.trim();
+  if(!val) return renderBusStops(getNearbyBusStops());
+  if(/^\d{5}$/.test(val)){
+    lastView="nearby";
+    renderBusStops(busStops.filter(b=>b.BusStopCode.includes(val)).map(bs=>{
+      const dist=userPosition?haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude):0;
+      return {...bs,distance:dist};
+    }),true); 
+    document.getElementById('backBtn').style.display='block';
+  } else {
+    const matches=[...new Set(busRoutes.filter(r=>r.ServiceNo.includes(val)).map(r=>r.ServiceNo))];
+    const container=document.getElementById('busstopContainer'); container.innerHTML='';
+    matches.forEach(no=>{
+      const div=document.createElement('div'); div.className='busstop-card'; div.innerHTML=`<h3 style="cursor:pointer">${no}</h3>`;
+      div.onclick=()=>{ lastView="search"; showBusModal({ServiceNo:no}); };
+      container.appendChild(div);
+    });
+    document.getElementById('backBtn').style.display='block';
   }
-  
-  // 测试域名解析
-  try {
-    await fetch('https://busapi.0515364.xyz/', { mode: 'no-cors' });
-    resultsDiv.innerHTML += '<p class="success">域名解析正常</p>';
-  } catch (error) {
-    resultsDiv.innerHTML += '<p class="error">域名解析失败</p>';
-  }
-}
+};
+document.getElementById('refreshBtn').onclick=()=>{
+  if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos=>{
+    userPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    lastView="nearby"; renderBusStops(getNearbyBusStops());
+    renderFavoritesNoCollapse();
+    document.getElementById('backBtn').style.display='none';
+  }); }
+};
+document.getElementById('backBtn').onclick=()=>{
+  if(lastView==="nearby") renderBusStops(getNearbyBusStops());
+  else if(lastView==="search") document.getElementById('searchBtn').click();
+  else renderBusStops(getNearbyBusStops());
+  document.getElementById('backBtn').style.display='none';
+};
 
-// 运行测试
-async function runAllTests() {
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '<h3>运行测试...</h3>';
-  
-  await testConnectivity();
-  await testAPIs();
-}
+// 初始化
+(async function(){ 
+  await loadData();
+  if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(pos=>{
+    userPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    renderBusStops(getNearbyBusStops());
+    renderFavoritesNoCollapse();
+  }); }
+})();
 
-runAllTests();
+// 添加缺失的showBusModal函数
+function showBusModal(bus) {
+  const modal = document.getElementById('busModal');
+  const busNo = document.getElementById('modalBusNo');
+  const tabs = document.getElementById('modalTabs');
+  const tabContents = document.getElementById('modalTabContents');
+  
+  busNo.textContent = `巴士 ${bus.ServiceNo}`;
+  tabs.innerHTML = '';
+  tabContents.innerHTML = '';
+  
+  // 这里可以添加更多弹窗内容
+  modal.style.display = 'flex';
+}
 </script>
 
 </body>
