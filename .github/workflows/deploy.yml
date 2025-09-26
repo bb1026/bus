@@ -14,20 +14,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. 拉取代码
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. 设置 Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20"
 
+      # 3. 安装 Wrangler
       - name: Install Wrangler
         run: npm install -g wrangler
 
+      # 4. 上传 LTA Key 到 Worker Secret
+      - name: Upload LTA Secret
+        run: echo "${{ secrets.LTA_API_KEY }}" | wrangler secret put LTA_API_KEY --env production
+        working-directory: workers
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+
+      # 5. 发布 Worker
       - name: Publish Worker
         working-directory: workers
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
-        run: npx wrangler deploy
+        run: npx wrangler deploy --env production
