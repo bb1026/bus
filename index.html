@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>公交站查询与收藏</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Singapore Bus</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+
 <style>
 body { 
     font-family: Arial, sans-serif; 
@@ -148,51 +149,35 @@ button:hover {
     margin-top:10px; 
     font-size:15px; 
 }
-.route-stop { 
-    display:flex; 
-    align-items:flex-start; 
-    margin-bottom:5px; 
+.route-stop {
+    margin-bottom: 5px;
 }
-.route-line { 
-    width:20px; 
-    display:flex; 
-    flex-direction:column; 
-    align-items:center; 
+.route-text {
+    margin-left: 8px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
-.route-circle { 
-    width:10px; 
-    height:10px; 
-    border-radius:50%; 
-    background:#007bff; 
+.route-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-.route-circle.current { 
-    background:#ff0000; 
+.route-refresh {
+    margin-left: 10px;
+    background: transparent;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 14px;
 }
-.route-connector { 
-    flex:1; 
-    width:2px; 
-    background:#007bff; 
+.route-refresh:hover {
+    color: #0056b3;
 }
-.route-text { 
-    margin-left:8px; 
-    flex:1; 
-}
-.route-refresh { 
-    margin-left:10px; 
-    background:transparent; 
-    border:none; 
-    color:#007bff; 
-    cursor:pointer; 
-    font-size:14px; 
-}
-.route-refresh:hover { 
-    color:#0056b3; 
-}
-.route-times { 
-    margin-top:5px; 
-    font-size:12px; 
-    color:#666; 
-    padding-left:28px; 
+.route-times {
+    margin-top: 3px; 
+    font-size: 12px;
+    color: #666;
 }
 .op-table { 
     border-collapse: collapse; 
@@ -219,14 +204,28 @@ button:hover {
 .search-section {
     margin-bottom:15px; 
 }
-
-<!-- 隐藏查询按钮 -->
 #searchBtn { display: none; }
+.responsive-wrapper {
+  max-width: 480px; 
+  margin: 0 auto;   
+  padding: 10px;
+}
+@media screen and (min-width: 768px) {
+  .responsive-wrapper {
+    max-width: 700px;
+  }
+}
+@media screen and (min-width: 1024px) {
+  .responsive-wrapper {
+    max-width: 900px;
+  }
+}
 </style>
+
 </head>
 <body>
 
-<h2><i class="fas fa-bus"></i> 公交站查询与收藏</h2>
+<h2><i class="fas fa-bus"></i> Singapore Bus</h2>
 
 <div class="controls">
   <input type="text" id="searchInput" placeholder="输入巴士站号或巴士号">
@@ -248,7 +247,6 @@ button:hover {
 
 <div class="busstop-container" id="busstopContainer"></div>
 
-<!-- 弹窗 -->
 <div class="modal" id="busModal">
   <div class="modal-content">
     <span class="modal-close" id="modalClose">&times;</span>
@@ -298,12 +296,10 @@ async function getBusArrivalTimes(busStopCode) {
 }
 
 function getNextBuses(busStopCode){
-  // 使用您提供的方法去重
   const matchedRoutes = busRoutes
     .filter(route => route.BusStopCode === busStopCode)
     .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
   
-  // 去重处理
   const uniqueBuses = [];
   const seen = new Set();
   
@@ -324,7 +320,7 @@ function getNextBuses(busStopCode){
       Operator:b.Operator,
       Direction:b.Direction,
       Origin:originStop?`${originStop.Description} (${originStop.BusStopCode})`:`${b.BusStopCode}`,
-      Destination:destStop?`${destStop.Description} (${destStop.BusStopCode})`:`${b.DestinationCode}`,
+      Destination:destStop?`${destStop.Description} (${originStop.BusStopCode})`:`${b.DestinationCode}`,
       WD_FirstBus:b.WD_FirstBus||'--',
       WD_LastBus:b.WD_LastBus||'--',
       SAT_FirstBus:b.SAT_FirstBus||'--',
@@ -341,47 +337,105 @@ function getNearbyBusStops(limit=20){
     const dist=haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude);
     return {...bs,distance:dist};
   }).sort((a,b)=>a.distance-b.distance)
-    .filter(bs => bs.distance <= 500) // 只显示500米以内的巴士站
+    .filter(bs => bs.distance <= 500)
     .slice(0,limit);
 }
 
-// ---------- 收藏操作 ----------
-function toggleFavorite(busStopCode,bus){
-  const idx=favoriteBuses.findIndex(f=>f.BusStopCode===busStopCode && f.bus.ServiceNo===bus.ServiceNo);
-  if(idx>=0) favoriteBuses.splice(idx,1);
-  else favoriteBuses.push({BusStopCode:busStopCode,bus});
+function toggleFavorite(busStopCode, bus) {
+  const idx = favoriteBuses.findIndex(f => f.BusStopCode === busStopCode && f.bus.ServiceNo === bus.ServiceNo);
+  const isFavorite = idx >= 0;
+
+  if (isFavorite) {
+    favoriteBuses.splice(idx, 1);
+  } else {
+    favoriteBuses.push({ BusStopCode: busStopCode, bus });
+  }
   saveFavorites();
-  renderAllSections();
+
+  document.querySelectorAll(`.star[data-bus="${bus.ServiceNo}"][data-stop="${busStopCode}"]`).forEach(star => {
+    if (isFavorite) star.classList.add('unfilled');
+    else star.classList.remove('unfilled');
+  });
+
+  const favoriteSection = document.getElementById('favoriteSection');
+
+if (!isFavorite) {
+  const bs = busStops.find(b => b.BusStopCode === busStopCode);
+  if (!bs) return;
+
+  const card = document.createElement('div');
+  card.className = 'busstop-card';
+  card.dataset.stop = busStopCode;
+
+  const listDiv = document.createElement('div');
+  listDiv.className = 'bus-list show';
+  card.appendChild(listDiv);
+
+  const busDiv = document.createElement('div');
+  busDiv.className = 'bus-item';
+  busDiv.innerHTML = `
+    <span><i class="fas fa-bus"></i> ${bus.ServiceNo} --<br>→${bus.Destination} -- --</span>
+    <span class="star" data-bus="${bus.ServiceNo}" data-stop="${busStopCode}">&#9733;</span>
+  `;
+
+  busDiv.querySelector('.star').onclick = e => {
+    e.stopPropagation();
+    toggleFavorite(busStopCode, bus);
+  };
+
+  listDiv.appendChild(busDiv);
+  favoriteSection.appendChild(card);
+} else {
+    const card = favoriteSection.querySelector(`.busstop-card[data-stop="${busStopCode}"]`);
+    if (card) favoriteSection.removeChild(card);
+  }
 }
 
-// ---------- 只刷新时间 ----------
 async function refreshTimesOnly() {
-  // 刷新收藏部分的时间
-  const favoriteCards = document.querySelectorAll('#favoriteSection .busstop-card');
-  for (const card of favoriteCards) {
-    const headerText = card.querySelector('.busstop-header p').textContent;
-    const busStopCode = headerText.split(' ')[0];
-    await updateBusTimes(card, busStopCode);
-  }
-  
-  // 刷新附近站点部分的时间
-  const nearbyCards = document.querySelectorAll('#nearbySection .busstop-card');
-  for (const card of nearbyCards) {
-    const headerText = card.querySelector('.busstop-header p').textContent;
-    const busStopCode = headerText.split(' ')[0];
-    await updateBusTimes(card, busStopCode);
-  }
-  
-  // 刷新搜索结果部分的时间
-  const searchCards = document.querySelectorAll('#searchSection .busstop-card');
-  for (const card of searchCards) {
-    const headerText = card.querySelector('.busstop-header p').textContent;
-    const busStopCode = headerText.split(' ')[0];
-    await updateBusTimes(card, busStopCode);
+  const allCards = document.querySelectorAll('.busstop-card');
+
+  for (const card of allCards) {
+    const busItems = card.querySelectorAll('.bus-item');
+
+    const header = card.querySelector('.busstop-header p');
+    if (!header) continue;
+    const busStopCode = header.textContent.split(' ')[0];
+
+    const arrivalData = await getBusArrivalTimes(busStopCode);
+
+    busItems.forEach(busDiv => {
+      const span = busDiv.querySelector('span');
+      const busNo = busDiv.querySelector('.star').dataset.bus;
+
+      let arrivalText1 = '--';
+      let arrivalText2 = '--';
+      let arrivalText3 = '--';
+
+      if (arrivalData && arrivalData.Services) {
+        const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
+        if (service) {
+          if (service.NextBus?.EstimatedArrival) {
+            const mins = Math.round((new Date(service.NextBus.EstimatedArrival) - new Date()) / 60000);
+            arrivalText1 = mins > 0 ? `${mins}分钟` : '即将到达';
+          }
+          if (service.NextBus2?.EstimatedArrival) {
+            const mins = Math.round((new Date(service.NextBus2.EstimatedArrival) - new Date()) / 60000);
+            arrivalText2 = mins > 0 ? `${mins}分钟` : '即将到达';
+          }
+          if (service.NextBus3?.EstimatedArrival) {
+            const mins = Math.round((new Date(service.NextBus3.EstimatedArrival) - new Date()) / 60000);
+            arrivalText3 = mins > 0 ? `${mins}分钟` : '即将到达';
+          }
+        }
+      }
+
+      const busData = busServices.find(b => b.ServiceNo === busNo);
+      span.innerHTML = `<i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
+<i class="fas fa-arrow-circle-right"></i> ${busData?.Destination || '--'} ${arrivalText2} ${arrivalText3}`;
+    });
   }
 }
 
-// 更新巴士时间
 async function updateBusTimes(card, busStopCode) {
   const arrivalData = await getBusArrivalTimes(busStopCode);
   const busItems = card.querySelectorAll('.bus-item');
@@ -390,10 +444,9 @@ async function updateBusTimes(card, busStopCode) {
     const busText = busItem.querySelector('span');
     const busNo = busText.textContent.split(' ')[0];
     
-    // 获取实时到达时间
-    let arrivalText1 = '--分钟';
-    let arrivalText2 = '--分钟';
-    let arrivalText3 = '--分钟';
+    let arrivalText1 = '--';
+    let arrivalText2 = '--';
+    let arrivalText3 = '--';
     
     if (arrivalData && arrivalData.Services) {
       const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
@@ -419,12 +472,13 @@ async function updateBusTimes(card, busStopCode) {
       }
     }
     
-    const parts = busText.textContent.split('→');
-    busText.innerHTML = `${busNo} ${arrivalText1}<br>→${parts[1].split(' ')[0]} ${arrivalText2} ${arrivalText3}`;
+    busText.innerHTML = `
+  <i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
+  <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
+`;
   });
 }
 
-// ---------- 渲染所有部分 ----------
 async function renderAllSections() {
   if (currentView === 'default') {
     await renderFavorites();
@@ -439,100 +493,109 @@ async function renderAllSections() {
   }
 }
 
-// ---------- 渲染收藏 ----------
-async function renderFavorites(){
+async function renderFavorites() {
   const section = document.getElementById('favoriteSection');
   section.innerHTML = '<h3>我的收藏</h3>';
-  
-  if(favoriteBuses.length===0){
-    const empty=document.createElement('div');
-    empty.className='busstop-card';
-    empty.innerHTML='<p>暂无收藏</p>';
+
+  if (favoriteBuses.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'busstop-card';
+    empty.innerHTML = '<p>暂无收藏</p>';
     section.appendChild(empty);
     return;
   }
-  
-  const grouped={};
-  favoriteBuses.forEach(f=>{
-    if(!grouped[f.BusStopCode]) grouped[f.BusStopCode]=[];
+
+  const grouped = {};
+  favoriteBuses.forEach(f => {
+    if (!grouped[f.BusStopCode]) grouped[f.BusStopCode] = [];
     grouped[f.BusStopCode].push(f.bus);
   });
-  
+
   for (const stopCode of Object.keys(grouped)) {
-    const bs=busStops.find(b=>b.BusStopCode===stopCode);
-    if(!bs) continue;
-    
-    // 计算收藏巴士站的距离
-    let distanceText = '';
+    const bs = busStops.find(b => b.BusStopCode === stopCode);
+    if (!bs) continue;
+
+    let distance = null;
     if (userPosition) {
-      const dist = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
-      distanceText = `${Math.round(dist)}m`;
+      distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
+      if (distance > 1000) continue;
     }
-    
-    const card=document.createElement('div'); 
-    card.className='busstop-card';
-    
-    // 获取实时数据
-    const arrivalData = await getBusArrivalTimes(stopCode);
-    
-    card.innerHTML=`<div class="busstop-header">
-      <h3>${bs.Description}</h3>
-      <p>${bs.BusStopCode} ${distanceText} ${bs.RoadName}</p>
-    </div><div class="separator"></div><div class="bus-list show"></div>`;
-    
-    const listDiv=card.querySelector('.bus-list');
-    
-    // 收藏置顶
-    grouped[stopCode].forEach(bus=>{
-      const busDiv=document.createElement('div'); 
-      busDiv.className='bus-item';
-      
-      // 获取实时到达时间
-      let arrivalText1 = '--分钟';
-      let arrivalText2 = '--分钟';
-      let arrivalText3 = '--分钟';
-      
-      if (arrivalData && arrivalData.Services) {
-        const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
-        if (service) {
-          if (service.NextBus && service.NextBus.EstimatedArrival) {
-            const arrivalTime = new Date(service.NextBus.EstimatedArrival);
-            const now = new Date();
-            const minutes = Math.round((arrivalTime - now) / 60000);
-            arrivalText1 = minutes > 0 ? `${minutes}分钟` : '即将到达';
-          }
-          if (service.NextBus2 && service.NextBus2.EstimatedArrival) {
-            const arrivalTime = new Date(service.NextBus2.EstimatedArrival);
-            const now = new Date();
-            const minutes = Math.round((arrivalTime - now) / 60000);
-            arrivalText2 = minutes > 0 ? `${minutes}分钟` : '即将到达';
-          }
-          if (service.NextBus3 && service.NextBus3.EstimatedArrival) {
-            const arrivalTime = new Date(service.NextBus3.EstimatedArrival);
-            const now = new Date();
-            const minutes = Math.round((arrivalTime - now) / 60000);
-            arrivalText3 = minutes > 0 ? `${minutes}分钟` : '即将到达';
+
+    const distanceText = distance ? `${Math.round(distance)}m` : '';
+
+    const card = document.createElement('div');
+    card.className = 'busstop-card';
+    card.innerHTML = `
+      <div class="busstop-header">
+        <h3><i class="fas fa-directions"></i> ${bs.Description}</h3>
+        <p>
+          <i class="fas fa-minus-circle"></i> ${bs.BusStopCode} 
+          ${distanceText ? `<i class="fas fa-location-arrow"></i> ${distanceText}` : ''} 
+          <i class="fas fa-map-marked-alt"></i> ${bs.RoadName}
+        </p>
+      </div>
+      <div class="separator"></div>
+      <div class="bus-list show"></div>
+    `;
+    section.appendChild(card);
+
+    const listDiv = card.querySelector('.bus-list');
+    grouped[stopCode].forEach(bus => {
+      const busDiv = document.createElement('div');
+      busDiv.className = 'bus-item';
+      busDiv.innerHTML = `
+  <span>
+    <i class="fas fa-bus"></i> ${bus.ServiceNo} --<br>
+    <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} -- --
+  </span>
+  <span class="star" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
+`;
+      listDiv.appendChild(busDiv);
+
+      busDiv.querySelector('.star').onclick = e => {
+        e.stopPropagation();
+        toggleFavorite(bs.BusStopCode, bus);
+      };
+
+      busDiv.onclick = () => showBusModal(bus);
+    });
+
+    (async (listDiv, stopCode) => {
+      const arrivalData = await getBusArrivalTimes(stopCode);
+      listDiv.querySelectorAll('.bus-item').forEach(busDiv => {
+        const starEl = busDiv.querySelector('.star');
+        const serviceNo = starEl.dataset.bus;
+        const bus = grouped[stopCode].find(b => b.ServiceNo === serviceNo);
+        if (!bus) return;
+
+        let arrivalText1 = '--', arrivalText2 = '--', arrivalText3 = '--';
+
+        if (arrivalData && arrivalData.Services) {
+          const service = arrivalData.Services.find(s => s.ServiceNo === serviceNo);
+          if (service) {
+            if (service.NextBus?.EstimatedArrival) {
+              const minutes = Math.round((new Date(service.NextBus.EstimatedArrival) - new Date()) / 60000);
+              arrivalText1 = minutes > 0 ? `${minutes}分钟` : '即将到达';
+            }
+            if (service.NextBus2?.EstimatedArrival) {
+              const minutes = Math.round((new Date(service.NextBus2.EstimatedArrival) - new Date()) / 60000);
+              arrivalText2 = minutes > 0 ? `${minutes}分钟` : '即将到达';
+            }
+            if (service.NextBus3?.EstimatedArrival) {
+              const minutes = Math.round((new Date(service.NextBus3.EstimatedArrival) - new Date()) / 60000);
+              arrivalText3 = minutes > 0 ? `${minutes}分钟` : '即将到达';
+            }
           }
         }
-      }
-      
-      busDiv.innerHTML=`<span>${bus.ServiceNo} ${arrivalText1}<br>→${bus.Destination} ${arrivalText2} ${arrivalText3}</span>
-        <span class="star" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>`;
-      listDiv.appendChild(busDiv);
-      
-      busDiv.querySelector('.star').onclick=e=>{
-        e.stopPropagation();
-        toggleFavorite(bs.BusStopCode,bus);
-      };
-      
-      busDiv.onclick=()=>showBusModal(bus);
-    });
-    
-    section.appendChild(card);
+
+        const span = busDiv.querySelector('span');
+        span.innerHTML = `<i class="fas fa-bus"></i>${serviceNo} ${arrivalText1}<br>
+<i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}`;
+      });
+    })(listDiv, stopCode);
   }
 }
 
-// ---------- 渲染附近站点 ----------
 async function renderNearbyStops(){
   const section = document.getElementById('nearbySection');
   section.innerHTML = '<h3>附近巴士</h3>';
@@ -550,20 +613,25 @@ async function renderNearbyStops(){
     const card=document.createElement('div'); 
     card.className='busstop-card';
     
-    // 获取该站所有巴士（去重）
     let buses=getNextBuses(bs.BusStopCode);
-    // 收藏的置顶
     const favBuses=favoriteBuses.filter(f=>f.BusStopCode===bs.BusStopCode).map(f=>f.bus);
     const otherBuses=buses.filter(b=>!favBuses.some(f=>f.ServiceNo===b.ServiceNo));
     buses=[...favBuses,...otherBuses];
     
-    // 获取实时数据
     const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
     
-    card.innerHTML=`<div class="busstop-header">
-      <h3>${bs.Description}</h3>
-      <p>${bs.BusStopCode} ${Math.round(bs.distance||0)}m ${bs.RoadName}</p>
-    </div><div class="separator"></div><div class="bus-list"></div>`;
+    card.innerHTML = `
+  <div class="busstop-header">
+    <h3><i class="fas fa-directions"></i> ${bs.Description}</h3>
+    <p>
+      <i class="fas fa-minus-circle"></i> ${bs.BusStopCode} 
+      <i class="fas fa-location-arrow"></i> ${Math.round(bs.distance||0)}m 
+      <i class="fas fa-map-marked-alt"></i> ${bs.RoadName}
+    </p>
+  </div>
+  <div class="separator"></div>
+  <div class="bus-list"></div>
+`;
     
     const listDiv=card.querySelector('.bus-list');
     
@@ -572,10 +640,9 @@ async function renderNearbyStops(){
       const busDiv=document.createElement('div'); 
       busDiv.className='bus-item';
       
-      // 获取实时到达时间
-      let arrivalText1 = '--分钟';
-      let arrivalText2 = '--分钟';
-      let arrivalText3 = '--分钟';
+      let arrivalText1 = '--';
+      let arrivalText2 = '--';
+      let arrivalText3 = '--';
       
       if (arrivalData && arrivalData.Services) {
         const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
@@ -601,8 +668,13 @@ async function renderNearbyStops(){
         }
       }
       
-      busDiv.innerHTML=`<span>${bus.ServiceNo} ${arrivalText1}<br>→${bus.Destination} ${arrivalText2} ${arrivalText3}</span>
-        <span class="star ${isFav?'':'unfilled'}" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>`;
+      busDiv.innerHTML = `
+  <span>
+    <i class="fas fa-bus"></i> ${bus.ServiceNo} ${arrivalText1}<br>
+    <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
+  </span>
+  <span class="star ${isFav ? '' : 'unfilled'}" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
+`;
       listDiv.appendChild(busDiv);
       
       busDiv.querySelector('.star').onclick=e=>{
@@ -621,7 +693,6 @@ async function renderNearbyStops(){
   }
 }
 
-// ---------- 弹窗 ----------
 function showBusModal(bus){
   const modal=document.getElementById('busModal');
   document.getElementById('modalBusNo').innerText=`巴士 ${bus.ServiceNo}`;
@@ -629,13 +700,11 @@ function showBusModal(bus){
   const contents=document.getElementById('modalTabContents');
   tabs.innerHTML=''; contents.innerHTML='';
 
-  // Tab 1: 营运时间
   const tab1=document.createElement('button'); tab1.innerText='营运时间';
   const content1=document.createElement('div'); content1.className='tab-content';
   content1.innerHTML=renderOpHours(bus);
   tabs.appendChild(tab1); contents.appendChild(content1);
 
-  // Tab 2: 路线
   const tab2=document.createElement('button'); tab2.innerText='路线图';
   const content2=document.createElement('div'); content2.className='tab-content';
   content2.innerHTML=renderRouteMap(bus);
@@ -651,7 +720,6 @@ function showBusModal(bus){
   modal.style.display='flex';
 }
 
-// 营运时间表
 function renderOpHours(bus){
   return `<table class="op-table">
     <tr><th>类型</th><th>首班车</th><th>末班车</th></tr>
@@ -661,15 +729,11 @@ function renderOpHours(bus){
   </table>`;
 }
 
-// 路线图
-
-function renderRouteMap(bus){
-  // 使用您提供的方法获取路线
+function renderRouteMap(bus) {
   const matchedRoutes = busRoutes
     .filter(route => route.ServiceNo === bus.ServiceNo && route.Direction === bus.Direction)
-    .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
-
-  // 找到离用户最近的站点
+    .sort((a, b) => a.StopSequence - b.StopSequence); 
+  
   let nearestStopCode = null;
   if(userPosition){
     let minDist = Infinity;
@@ -677,7 +741,7 @@ function renderRouteMap(bus){
       const stop = busStops.find(bs=>bs.BusStopCode===route.BusStopCode);
       if(!stop) return;
       const dist = haversine(userPosition.lat,userPosition.lng,stop.Latitude,stop.Longitude);
-      if(dist < minDist){
+      if(dist < minDist && dist <= 1000){ 
         minDist = dist;
         nearestStopCode = stop.BusStopCode;
       }
@@ -688,63 +752,59 @@ function renderRouteMap(bus){
     matchedRoutes.map((route,i)=>{
       const stop=busStops.find(bs=>bs.BusStopCode===route.BusStopCode);
       if(!stop) return '';
-
-      let isCurrentStop = (stop.BusStopCode === nearestStopCode);
-
-      let mrtIndicator = "";
-      if(stop.Description.includes("MRT")||stop.Description.includes("LRT")) mrtIndicator=" 🚇";
-
+      const isCurrentStop = stop.BusStopCode === nearestStopCode;
+      const stopEmoji = isCurrentStop ? "🔴 " : "🔵 "; 
+      
       return `<div class="route-stop">
-        <div class="route-line">
-          <div class="route-circle ${isCurrentStop ? 'current' : ''}"></div>
-          ${i<matchedRoutes.length-1?'<div class="route-connector"></div>':''}
+        <div class="route-text">
+          <div class="route-info">
+            ${stopEmoji}${stop.Description}
+            <button class="route-refresh" data-stop="${stop.BusStopCode}" data-bus="${bus.ServiceNo}" data-direction="${bus.Direction}">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+          <div class="route-times" id="times-${stop.BusStopCode}"></div>
         </div>
-        <div class="route-text">${stop.Description} (${stop.BusStopCode})${mrtIndicator}</div>
-        <button class="route-refresh" data-stop="${stop.BusStopCode}" data-bus="${bus.ServiceNo}" data-direction="${bus.Direction}"><i class="fas fa-sync-alt"></i></button>
-        <div class="route-times" id="times-${stop.BusStopCode}"></div>
       </div>`;
     }).join('')
   }</div>`;
 }
 
-// 点击路线图上的刷新按钮
+document.addEventListener("click", async e => {
+  const refreshBtn = e.target.closest('.route-refresh');
+  if (!refreshBtn) return;
 
-document.addEventListener("click", async e=>{
-  if(e.target.closest('.route-refresh')){
-    const refreshBtn = e.target.closest('.route-refresh');
-    const stopCode = refreshBtn.dataset.stop;
-    const busNo = refreshBtn.dataset.bus;
-    const direction = parseInt(refreshBtn.dataset.direction);
+  const stopCode = refreshBtn.dataset.stop;
+  const busNo = refreshBtn.dataset.bus;
+  const direction = parseInt(refreshBtn.dataset.direction);
 
-    const timesDiv = document.getElementById(`times-${stopCode}`);
-    timesDiv.innerHTML = '加载中...';
+  const timesDiv = document.getElementById(`times-${stopCode}`);
+  timesDiv.innerHTML = '加载中...';
 
-    const arrivalData = await getBusArrivalTimes(stopCode);
-    if(arrivalData && arrivalData.Services){
-      const service = arrivalData.Services.find(s => s.ServiceNo===busNo);
-      let timesHTML = '--分钟';
-      if(service){
-        let arrs=[];
-        [service.NextBus,service.NextBus2,service.NextBus3].forEach(nb=>{
-          if(nb && nb.EstimatedArrival){
-            const mins=Math.round((new Date(nb.EstimatedArrival)-new Date())/60000);
-            arrs.push(mins>0?`${mins}分钟`:'即将到达');
-          }
-        });
-        timesHTML = arrs.join(', ');
-      }
-      timesDiv.innerHTML = timesHTML;
-    } else timesDiv.innerHTML = '暂无巴士信息';
+  const arrivalData = await getBusArrivalTimes(stopCode);
+  if (arrivalData && arrivalData.Services) {
+    const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
+    let timesHTML = '--';
+    if (service) {
+      const arrs = [];
+      [service.NextBus, service.NextBus2, service.NextBus3].forEach(nb => {
+        if (nb && nb.EstimatedArrival) {
+          const mins = Math.round((new Date(nb.EstimatedArrival) - new Date()) / 60000);
+          arrs.push(mins > 0 ? `${mins}分钟` : '即将到达');
+        }
+      });
+      timesHTML = `<span class="bus-number">${busNo}: </span>${arrs.join(', ')}`;
+    }
+    timesDiv.innerHTML = timesHTML;
+  } else {
+    timesDiv.innerHTML = '暂无巴士信息';
   }
 });
-
-// ---------- 事件绑定 ----------
 
 document.getElementById('modalClose').onclick = () => {
   document.getElementById('busModal').style.display = 'none';
 };
 
-// 搜索按钮点击逻辑，触发模糊匹配
 document.getElementById('searchBtn').onclick = async () => {
   const val = searchInput.value.trim();
   if (!val) {
@@ -755,11 +815,9 @@ document.getElementById('searchBtn').onclick = async () => {
 
   currentView = 'search';
   
-  // 触发 input 事件执行模糊匹配
   searchInput.dispatchEvent(new Event('input'));
 };
 
-// 渲染搜索巴士结果
 async function renderSearchBuses(busCode, routes) {
   const section = document.getElementById('searchSection');
   section.innerHTML = '<h3>搜索结果</h3>';
@@ -772,7 +830,6 @@ async function renderSearchBuses(busCode, routes) {
     return;
   }
   
-  // 按方向分组
   const directions = [...new Set(routes.map(r => r.Direction))];
   
   for (const direction of directions) {
@@ -785,12 +842,10 @@ async function renderSearchBuses(busCode, routes) {
     
     const listDiv=card.querySelector('.bus-list');
     
-    // 显示巴士信息
     const busDiv=document.createElement('div'); 
     busDiv.className='bus-item';
     busDiv.innerHTML=`<span>点击查看路线图</span>`;
     busDiv.onclick=()=>{
-      // 创建一个临时的巴士对象用于显示路线图
       const tempBus = {
         ServiceNo: busCode,
         Direction: direction,
@@ -809,7 +864,6 @@ async function renderSearchBuses(busCode, routes) {
   }
 }
 
-// 模糊匹配
 const searchInput=document.getElementById('searchInput');
 const searchSection=document.getElementById('searchSection');
 
@@ -838,7 +892,6 @@ searchInput.addEventListener('input', ()=>{
   searchSection.innerHTML='<h3>搜索结果</h3>'+html;
   searchSection.style.display='block';
 
-  // 点击匹配项
   searchSection.querySelectorAll('.busstop-card').forEach(el=>{
     el.onclick=async ()=>{
       if(el.dataset.stop){
@@ -854,7 +907,6 @@ searchInput.addEventListener('input', ()=>{
   });
 });
 
-// 渲染搜索巴士站结果
 async function renderSearchResults(stops) {
   const section = document.getElementById('searchSection');
   section.innerHTML = '<h3>搜索结果</h3>';
@@ -870,17 +922,27 @@ async function renderSearchResults(stops) {
   for (const bs of stops) {
     const card=document.createElement('div'); 
     card.className='busstop-card';
+
+if(userPosition && !bs.distance){
+      bs.distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
+    }
     
-    // 获取该站所有巴士（去重）
     let buses=getNextBuses(bs.BusStopCode);
     
-    // 获取实时数据
     const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
     
-    card.innerHTML=`<div class="busstop-header">
-      <h3>${bs.Description}</h3>
-      <p>${bs.BusStopCode} ${userPosition ? Math.round(bs.distance||0)+'m' : ''} ${bs.RoadName}</p>
-    </div><div class="separator"></div><div class="bus-list show"></div>`;
+    card.innerHTML = `
+  <div class="busstop-header">
+    <h3><i class="fas fa-directions"></i> ${bs.Description}</h3>
+    <p>
+      <i class="fas fa-minus-circle"></i> ${bs.BusStopCode} 
+      ${userPosition ? `<i class="fas fa-location-arrow"></i> ${Math.round(bs.distance||0)}m` : ''} 
+      <i class="fas fa-map-marked-alt"></i> ${bs.RoadName}
+    </p>
+  </div>
+  <div class="separator"></div>
+  <div class="bus-list show"></div>
+`;
     
     const listDiv=card.querySelector('.bus-list');
     
@@ -889,10 +951,9 @@ async function renderSearchResults(stops) {
       const busDiv=document.createElement('div'); 
       busDiv.className='bus-item';
       
-      // 获取实时到达时间
-      let arrivalText1 = '--分钟';
-      let arrivalText2 = '--分钟';
-      let arrivalText3 = '--分钟';
+      let arrivalText1 = '--';
+      let arrivalText2 = '--';
+      let arrivalText3 = '--';
       
       if (arrivalData && arrivalData.Services) {
         const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
@@ -918,8 +979,15 @@ async function renderSearchResults(stops) {
         }
       }
       
-      busDiv.innerHTML=`<span>${bus.ServiceNo} ${arrivalText1}<br>→${bus.Destination} ${arrivalText2} ${arrivalText3}</span>
-        <span class="star ${isFav?'':'unfilled'}" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>`;
+      busDiv.innerHTML = `
+  <span>
+    <i class="fas fa-bus"></i> ${bus.ServiceNo} ${arrivalText1}<br>
+    <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
+  </span>
+  <span class="star ${isFav ? '' : 'unfilled'}" 
+        data-bus="${bus.ServiceNo}" 
+        data-stop="${bs.BusStopCode}">&#9733;</span>
+`;
       listDiv.appendChild(busDiv);
       
       busDiv.querySelector('.star').onclick=e=>{
@@ -943,42 +1011,40 @@ document.getElementById('refreshBtn').onclick=()=>{
   }
 };
 
-// 自动刷新函数
 function startAutoRefresh() {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
+  stopAutoRefresh(); 
+let refreshInterval = setInterval(() => {
+  if(currentView === 'default') {
+    refreshTimesOnly(); 
   }
-  
-  refreshInterval = setInterval(async () => {
-    console.log('自动刷新时间...');
-    await refreshTimesOnly(); // 只刷新时间，不刷新整个界面
-  }, 10000); // 每10秒刷新一次
+}, 10000);
 }
 
-// 监听搜索框变化
-document.getElementById('searchInput').addEventListener('input', function() {
-  if (this.value.trim() === '') {
-    currentView = 'default';
-    renderAllSections();
-  }
-});
-
-function pauseAutoRefresh() {
+function stopAutoRefresh() {
   if (refreshInterval) {
     clearInterval(refreshInterval);
     refreshInterval = null;
   }
 }
 
-function resumeAutoRefresh() {
-  if (!refreshInterval) {
-    refreshInterval = setInterval(async () => {
-      if(currentView === 'default') {
-        await refreshTimesOnly();
-      }
-    }, 10000);
-  }
+function pauseAutoRefresh() {
+  stopAutoRefresh();
 }
+
+function resumeAutoRefresh() {
+  if (!refreshInterval) startAutoRefresh();
+}
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  if (this.value.trim() === '') {
+    currentView = 'default';
+    renderAllSections();
+    resumeAutoRefresh();
+  } else {
+    currentView = 'search';
+    pauseAutoRefresh();
+  }
+});
 
 function showSearchView() {
   document.getElementById('favoriteSection').style.display = 'none';
@@ -992,84 +1058,112 @@ function showDefaultView() {
   searchSection.style.display = 'none';
 }
 
-// ---------- 初始化 ----------
 (async function(){ 
   await loadData();
   if(navigator.geolocation){ 
     navigator.geolocation.getCurrentPosition(pos=>{
       userPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
       renderAllSections();
-      startAutoRefresh(); // 开始自动刷新
+      startAutoRefresh();
     }, () => {
-      // 如果定位失败，显示所有站点
       renderAllSections();
-      startAutoRefresh(); // 开始自动刷新
+      startAutoRefresh(); 
     }); 
   } else {
-    // 如果没有定位权限，显示所有站点
     renderAllSections();
-    startAutoRefresh(); // 开始自动刷新
+    startAutoRefresh(); 
   }
 
-// ----------------- 搜索逻辑 -----------------
+let autoRefreshTimer = null;
+let currentView = 'default';
+let expandedStopCode = null; 
 
-// 绑定事件
-document.getElementById('searchBtn').onclick = performSearch;
-const searchInput = document.getElementById('searchInput');
-searchInput.addEventListener('input', performSearch);
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(async () => {
+    if (currentView === 'default') {
+      renderAllSections(); 
+    } else if (currentView === 'search-result' && expandedStopCode) {
+      await refreshBusStopTimes(expandedStopCode);
+    }
+  }, 10000);
+}
 
-// 执行搜索
+function stopAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+}
 
-async function performSearch() {
-  const val = searchInput.value.trim();
-  if(!val) {
+searchInput.addEventListener('input', async function () {
+  const val = this.value.trim();
+
+  if (!val) {
     currentView = 'default';
     showDefaultView();
-    resumeAutoRefresh(); // 回到默认视图，恢复刷新
     renderAllSections();
-    return;
+    expandedStopCode = null;
+    startAutoRefresh();
+  } else {
+    currentView = 'search-input';
+    showSearchView();
+    stopAutoRefresh();
+    await performSearch(val);
   }
+});
 
-  currentView = 'search';
-  showSearchView();
-  pauseAutoRefresh(); // 搜索时暂停刷新
+async function performSearch(val) {
   searchSection.innerHTML = '<h3>搜索结果</h3>';
 
-  let busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
-  let stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.startsWith(val));
+  const busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
+  const stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.includes(val));
 
   let html = '';
-  if(busMatches.length){
+  if (busMatches.length) {
     html += '<h4>巴士号</h4>';
     busMatches.forEach(b => {
-      html += `<div class="busstop-card" style="cursor:pointer;" data-bus="${b.ServiceNo}">巴士 ${b.ServiceNo}</div>`;
+      html += `<div class="busstop-card" data-bus="${b.ServiceNo}">巴士 ${b.ServiceNo}</div>`;
     });
   }
-  if(stopMatches.length){
+  if (stopMatches.length) {
     html += '<h4>巴士站</h4>';
     stopMatches.forEach(s => {
-      html += `<div class="busstop-card" style="cursor:pointer;" data-stop="${s.BusStopCode}">${s.Description} (${s.BusStopCode})</div>`;
+      html += `<div class="busstop-card" data-stop="${s.BusStopCode}">${s.Description} (${s.BusStopCode})</div>`;
     });
   }
-  if(!busMatches.length && !stopMatches.length){
+  if (!busMatches.length && !stopMatches.length) {
     html += '<p>没有找到相关结果</p>';
   }
+
   searchSection.innerHTML += html;
 
-  // 点击条目显示详细信息
-  searchSection.querySelectorAll('.busstop-card').forEach(el => {
-    el.onclick = async () => {
-      if(el.dataset.bus){
-        const svc = busServices.find(s => s.ServiceNo === el.dataset.bus);
-        const routes = busRoutes.filter(r => r.ServiceNo === el.dataset.bus);
-        await renderSearchBuses(el.dataset.bus, routes);
-      } else if(el.dataset.stop){
-        const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
-        if(bs) await renderSearchResults([bs]);
-      }
-    };
-  });
+  currentView = 'search-result';
+  startAutoRefresh();
 }
+
+searchSection.addEventListener('click', async (e) => {
+  const el = e.target.closest('.busstop-card');
+  if (!el) return;
+
+  if (el.dataset.bus) {
+    expandedStopCode = null; 
+    const svc = el.dataset.bus;
+    const routes = busRoutes.filter(r => r.ServiceNo === svc);
+    await renderSearchBuses(svc, routes);
+  } else if (el.dataset.stop) {
+    expandedStopCode = el.dataset.stop; 
+    const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
+    if (bs) await renderSearchResults([bs]);
+  }
+});
+
+async function refreshBusStopTimes(stopCode) {
+  const bs = busStops.find(b => b.BusStopCode === stopCode);
+  if (!bs) return;
+  await renderSearchResults([bs]); 
+}
+startAutoRefresh();
 
 })();
 </script>
