@@ -219,6 +219,9 @@ button:hover {
 .search-section {
     margin-bottom:15px; 
 }
+
+<!-- 隐藏查询按钮 -->
+#searchBtn { display: none; }
 </style>
 </head>
 <body>
@@ -659,43 +662,45 @@ function renderOpHours(bus){
 }
 
 // 路线图
+
 function renderRouteMap(bus){
   // 使用您提供的方法获取路线
   const matchedRoutes = busRoutes
     .filter(route => route.ServiceNo === bus.ServiceNo && route.Direction === bus.Direction)
     .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
-  
+
+  // 找到离用户最近的站点
+  let nearestStopCode = null;
+  if(userPosition){
+    let minDist = Infinity;
+    matchedRoutes.forEach(route=>{
+      const stop = busStops.find(bs=>bs.BusStopCode===route.BusStopCode);
+      if(!stop) return;
+      const dist = haversine(userPosition.lat,userPosition.lng,stop.Latitude,stop.Longitude);
+      if(dist < minDist){
+        minDist = dist;
+        nearestStopCode = stop.BusStopCode;
+      }
+    });
+  }
+
   return `<div class="route-map">${
     matchedRoutes.map((route,i)=>{
       const stop=busStops.find(bs=>bs.BusStopCode===route.BusStopCode);
       if(!stop) return '';
-      
-      // 判断是否是最近的巴士站（1000米内）
-     let isCurrentStop = false;
-if (userPosition) {
-  const dist = haversine(userPosition.lat, userPosition.lng, stop.Latitude, stop.Longitude);
-  if (dist < 1000) isCurrentStop = true;
-}
-      
+
+      let isCurrentStop = (stop.BusStopCode === nearestStopCode);
+
       let mrtIndicator = "";
-      if(stop.Description.includes("MRT")||stop.Description.includes("LRT")) {
-        mrtIndicator = " 🚇";
-      }
-      
-      // 显示距离
-      let distanceText = "";
-      if (userPosition) {
-        const dist = haversine(userPosition.lat, userPosition.lng, stop.Latitude, stop.Longitude);
-        distanceText = ` (${Math.round(dist)}m)`;
-      }
-      
+      if(stop.Description.includes("MRT")||stop.Description.includes("LRT")) mrtIndicator=" 🚇";
+
       return `<div class="route-stop">
         <div class="route-line">
           <div class="route-circle ${isCurrentStop ? 'current' : ''}"></div>
           ${i<matchedRoutes.length-1?'<div class="route-connector"></div>':''}
         </div>
-        <div class="route-text">${stop.Description} (${stop.BusStopCode})${distanceText}${mrtIndicator}</div>
-        <button class="route-refresh" data-stop="${stop.BusStopCode}"><i class="fas fa-sync-alt"></i></button>
+        <div class="route-text">${stop.Description} (${stop.BusStopCode})${mrtIndicator}</div>
+        <button class="route-refresh" data-stop="${stop.BusStopCode}" data-bus="${bus.ServiceNo}" data-direction="${bus.Direction}"><i class="fas fa-sync-alt"></i></button>
         <div class="route-times" id="times-${stop.BusStopCode}"></div>
       </div>`;
     }).join('')
@@ -703,89 +708,55 @@ if (userPosition) {
 }
 
 // 点击路线图上的刷新按钮
+
 document.addEventListener("click", async e=>{
   if(e.target.closest('.route-refresh')){
     const refreshBtn = e.target.closest('.route-refresh');
     const stopCode = refreshBtn.dataset.stop;
-    
-    // 显示加载中
+    const busNo = refreshBtn.dataset.bus;
+    const direction = parseInt(refreshBtn.dataset.direction);
+
     const timesDiv = document.getElementById(`times-${stopCode}`);
     timesDiv.innerHTML = '加载中...';
-    
-    // 获取实时数据
+
     const arrivalData = await getBusArrivalTimes(stopCode);
-    
-    if (arrivalData && arrivalData.Services) {
-      let timesHTML = '';
-      arrivalData.Services.forEach(service => {
-        let arrivalText1 = '--分钟';
-        let arrivalText2 = '--分钟';
-        let arrivalText3 = '--分钟';
-        
-        if (service.NextBus && service.NextBus.EstimatedArrival) {
-          const arrivalTime = new Date(service.NextBus.EstimatedArrival);
-          const now = new Date();
-          const minutes = Math.round((arrivalTime - now) / 60000);
-          arrivalText1 = minutes > 0 ? `${minutes}分钟` : '即将到达';
-        }
-        if (service.NextBus2 && service.NextBus2.EstimatedArrival) {
-          const arrivalTime = new Date(service.NextBus2.EstimatedArrival);
-          const now = new Date();
-          const minutes = Math.round((arrivalTime - now) / 60000);
-          arrivalText2 = minutes > 0 ? `${minutes}分钟` : '即将到达';
-        }
-        if (service.NextBus3 && service.NextBus3.EstimatedArrival) {
-          const arrivalTime = new Date(service.NextBus3.EstimatedArrival);
-          const now = new Date();
-          const minutes = Math.round((arrivalTime - now) / 60000);
-          arrivalText3 = minutes > 0 ? `${minutes}分钟` : '即将到达';
-        }
-        
-        timesHTML += `${service.ServiceNo}: ${arrivalText1}, ${arrivalText2}, ${arrivalText3}<br>`;
-      });
-      
-      timesDiv.innerHTML = timesHTML || '暂无巴士信息';
-    } else {
-      timesDiv.innerHTML = '获取数据失败';
-    }
+    if(arrivalData && arrivalData.Services){
+      const service = arrivalData.Services.find(s => s.ServiceNo===busNo);
+      let timesHTML = '--分钟';
+      if(service){
+        let arrs=[];
+        [service.NextBus,service.NextBus2,service.NextBus3].forEach(nb=>{
+          if(nb && nb.EstimatedArrival){
+            const mins=Math.round((new Date(nb.EstimatedArrival)-new Date())/60000);
+            arrs.push(mins>0?`${mins}分钟`:'即将到达');
+          }
+        });
+        timesHTML = arrs.join(', ');
+      }
+      timesDiv.innerHTML = timesHTML;
+    } else timesDiv.innerHTML = '暂无巴士信息';
   }
 });
 
 // ---------- 事件绑定 ----------
-document.getElementById('modalClose').onclick=()=>{
-  document.getElementById('busModal').style.display='none';
+
+document.getElementById('modalClose').onclick = () => {
+  document.getElementById('busModal').style.display = 'none';
 };
 
-document.getElementById('searchBtn').onclick=async ()=>{
-  const val=document.getElementById('searchInput').value.trim();
-  if(!val) {
+// 搜索按钮点击逻辑，触发模糊匹配
+document.getElementById('searchBtn').onclick = async () => {
+  const val = searchInput.value.trim();
+  if (!val) {
     currentView = 'default';
     renderAllSections();
     return;
   }
-  
+
   currentView = 'search';
   
-  // 搜索巴士站号
-  if(/^\d{5}$/.test(val)){
-    const filteredStops = busStops.filter(b=>b.BusStopCode.includes(val)).map(bs=>{
-      const dist=userPosition?haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude):0;
-      return {...bs,distance:dist};
-    });
-    
-    // 渲染搜索结果
-    await renderSearchResults(filteredStops);
-  } 
-  // 搜索巴士号
-  else {
-    // 使用您提供的方法获取匹配的巴士路线
-    const matchedRoutes = busRoutes
-      .filter(route => route.ServiceNo.includes(val))
-      .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
-    
-    // 渲染搜索结果
-    await renderSearchBuses(val, matchedRoutes);
-  }
+  // 触发 input 事件执行模糊匹配
+  searchInput.dispatchEvent(new Event('input'));
 };
 
 // 渲染搜索巴士结果
@@ -837,6 +808,51 @@ async function renderSearchBuses(busCode, routes) {
     section.appendChild(card);
   }
 }
+
+// 模糊匹配
+const searchInput=document.getElementById('searchInput');
+const searchSection=document.getElementById('searchSection');
+
+searchInput.addEventListener('input', ()=>{
+  const val=searchInput.value.trim();
+  if(!val){
+    searchSection.style.display='none';
+    return;
+  }
+  
+  let matches=[];
+  if(/^\d{1,5}$/.test(val)){
+    matches=busStops.filter(bs=>bs.BusStopCode.includes(val) || bs.Description.includes(val));
+  } else {
+    matches=busServices.filter(svc=>svc.ServiceNo.includes(val));
+  }
+
+  let html='';
+  matches.forEach(m=>{
+    if(m.BusStopCode){
+      html+=`<div class="busstop-card" style="cursor:pointer;" data-stop="${m.BusStopCode}">${m.Description} (${m.BusStopCode})</div>`;
+    } else {
+      html+=`<div class="busstop-card" style="cursor:pointer;" data-bus="${m.ServiceNo}">巴士 ${m.ServiceNo}</div>`;
+    }
+  });
+  searchSection.innerHTML='<h3>搜索结果</h3>'+html;
+  searchSection.style.display='block';
+
+  // 点击匹配项
+  searchSection.querySelectorAll('.busstop-card').forEach(el=>{
+    el.onclick=async ()=>{
+      if(el.dataset.stop){
+        const bs=busStops.find(b=>b.BusStopCode===el.dataset.stop);
+        if(bs) await renderSearchResults([bs]);
+      } else if(el.dataset.bus){
+        const svc=busServices.find(s=>s.ServiceNo===el.dataset.bus);
+        if(svc){
+          await renderSearchBuses(el.dataset.bus,busRoutes.filter(r=>r.ServiceNo===el.dataset.bus));
+        }
+      }
+    };
+  });
+});
 
 // 渲染搜索巴士站结果
 async function renderSearchResults(stops) {
@@ -947,6 +963,35 @@ document.getElementById('searchInput').addEventListener('input', function() {
   }
 });
 
+function pauseAutoRefresh() {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
+  }
+}
+
+function resumeAutoRefresh() {
+  if (!refreshInterval) {
+    refreshInterval = setInterval(async () => {
+      if(currentView === 'default') {
+        await refreshTimesOnly();
+      }
+    }, 10000);
+  }
+}
+
+function showSearchView() {
+  document.getElementById('favoriteSection').style.display = 'none';
+  document.getElementById('nearbySection').style.display = 'none';
+  searchSection.style.display = 'block';
+}
+
+function showDefaultView() {
+  document.getElementById('favoriteSection').style.display = 'block';
+  document.getElementById('nearbySection').style.display = 'block';
+  searchSection.style.display = 'none';
+}
+
 // ---------- 初始化 ----------
 (async function(){ 
   await loadData();
@@ -965,6 +1010,67 @@ document.getElementById('searchInput').addEventListener('input', function() {
     renderAllSections();
     startAutoRefresh(); // 开始自动刷新
   }
+
+// ----------------- 搜索逻辑 -----------------
+
+// 绑定事件
+document.getElementById('searchBtn').onclick = performSearch;
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', performSearch);
+
+// 执行搜索
+
+async function performSearch() {
+  const val = searchInput.value.trim();
+  if(!val) {
+    currentView = 'default';
+    showDefaultView();
+    resumeAutoRefresh(); // 回到默认视图，恢复刷新
+    renderAllSections();
+    return;
+  }
+
+  currentView = 'search';
+  showSearchView();
+  pauseAutoRefresh(); // 搜索时暂停刷新
+  searchSection.innerHTML = '<h3>搜索结果</h3>';
+
+  let busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
+  let stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.startsWith(val));
+
+  let html = '';
+  if(busMatches.length){
+    html += '<h4>巴士号</h4>';
+    busMatches.forEach(b => {
+      html += `<div class="busstop-card" style="cursor:pointer;" data-bus="${b.ServiceNo}">巴士 ${b.ServiceNo}</div>`;
+    });
+  }
+  if(stopMatches.length){
+    html += '<h4>巴士站</h4>';
+    stopMatches.forEach(s => {
+      html += `<div class="busstop-card" style="cursor:pointer;" data-stop="${s.BusStopCode}">${s.Description} (${s.BusStopCode})</div>`;
+    });
+  }
+  if(!busMatches.length && !stopMatches.length){
+    html += '<p>没有找到相关结果</p>';
+  }
+  searchSection.innerHTML += html;
+
+  // 点击条目显示详细信息
+  searchSection.querySelectorAll('.busstop-card').forEach(el => {
+    el.onclick = async () => {
+      if(el.dataset.bus){
+        const svc = busServices.find(s => s.ServiceNo === el.dataset.bus);
+        const routes = busRoutes.filter(r => r.ServiceNo === el.dataset.bus);
+        await renderSearchBuses(el.dataset.bus, routes);
+      } else if(el.dataset.stop){
+        const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
+        if(bs) await renderSearchResults([bs]);
+      }
+    };
+  });
+}
+
 })();
 </script>
 
