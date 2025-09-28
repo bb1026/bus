@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公交站查询与收藏</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <input type="text" id="searchInput" placeholder="搜索公交或站牌">
+    <button id="searchBtn">搜索</button>
+    <button id="refreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
+  </header>
+
+  <main>
+    <section id="favoriteSection"></section>
+    <section id="nearbySection"></section>
+    <section id="searchSection" style="display:none"></section>
+  </main>
+
+  <div id="busModal" class="modal">
+    <div class="modal-content">
+      <span id="modalClose">&times;</span>
+      <div id="modalBusNo"></div>
+      <div id="modalTabs"></div>
+      <div id="modalTabContents"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
