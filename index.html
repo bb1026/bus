@@ -151,7 +151,7 @@
     .modal-close {
       float: right;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 32px;
     }
 
     .tab {
@@ -218,22 +218,32 @@
     }
 
 
-    .op-table {
-      border-collapse: collapse;
-      margin-top: 5px;
-      font-size: 14px;
-    }
+ .op-table {
+  border-collapse: collapse;
+  margin-top: 5px;
+  font-size: 14px;
+  width: 100%; /* 撑满容器，方便分配列宽 */
+}
 
-    .op-table th,
-    .op-table td {
-      border: 1px solid #ccc;
-      padding: 3px 8px;
-      text-align: center;
-    }
+.op-table th,
+.op-table td {
+  border: 1px solid #ccc;
+  padding: 3px 8px;
+  text-align: center;
+}
 
-    .op-table td:first-child {
-      text-align: left;
-    }
+.op-table td:first-child {
+  text-align: left;
+  width: 40%;   /* 类型列窄一点 */
+ text-align: center;
+}
+
+.op-table th:nth-child(2),
+.op-table td:nth-child(2),
+.op-table th:nth-child(3),
+.op-table td:nth-child(3) {
+  width: 30%;   /* 首班车/末班车列更宽 */
+}
 
     #backBtn {
       display: none;
@@ -423,7 +433,7 @@
         const busDiv = document.createElement('div');
         busDiv.className = 'bus-item';
         busDiv.innerHTML = `
-    <span><i class="fas fa-bus"></i>${bus.ServiceNo} --<br> <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} -- --</span>
+    <span><i class="fas fa-bus"></i> ${bus.ServiceNo} --<br> <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} -- --</span>
     <span class="star" data-bus="${bus.ServiceNo}" data-stop="${busStopCode}">&#9733;</span>
   `;
 
@@ -487,7 +497,7 @@
           }
           const destination = busInfo.Destination || '--';
           span.innerHTML = `
-        <i class="fas fa-bus"></i>${busNo} ${arrivalText1}<br>
+        <i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
         <i class="fas fa-arrow-circle-right"></i> ${destination} ${arrivalText2} ${arrivalText3}
       `;
         });
@@ -528,7 +538,7 @@
           }
         }
         busText.innerHTML = `
-  <i class="fas fa-bus"></i>${busNo} ${arrivalText1}<br>
+  <i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
   <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
 `;
       });
@@ -598,7 +608,7 @@
           busDiv.className = 'bus-item';
           busDiv.innerHTML = `
   <span>
-    <i class="fas fa-bus"></i>${bus.ServiceNo} --<br>
+    <i class="fas fa-bus"></i> ${bus.ServiceNo} --<br>
     <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} -- --
   </span>
   <span class="star" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
@@ -638,7 +648,7 @@
             }
 
             const span = busDiv.querySelector('span');
-            span.innerHTML = `<i class="fas fa-bus"></i>${serviceNo} ${arrivalText1}<br>
+            span.innerHTML = `<i class="fas fa-bus"></i> ${serviceNo} ${arrivalText1}<br>
 <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}`;
           });
         })(listDiv, stopCode);
@@ -715,7 +725,7 @@
 
           busDiv.innerHTML = `
   <span>
-    <i class="fas fa-bus"></i>${bus.ServiceNo} ${arrivalText1}<br>
+    <i class="fas fa-bus"></i> ${bus.ServiceNo} ${arrivalText1}<br>
     <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
   </span>
   <span class="star ${isFav ? '' : 'unfilled'}" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
@@ -736,29 +746,40 @@
 
     function showBusModal(bus) {
       const modal = document.getElementById('busModal');
-      document.getElementById('modalBusNo').innerText = `巴士 ${bus.ServiceNo}`;
-      const tabs = document.getElementById('modalTabs');
-      const contents = document.getElementById('modalTabContents');
-      tabs.innerHTML = ''; contents.innerHTML = '';
+      document.getElementById('modalBusNo').innerHTML = `<i class="fas fa-bus"></i> ${bus.ServiceNo}`;
+const tabs = document.getElementById('modalTabs');
+const contents = document.getElementById('modalTabContents');
+tabs.innerHTML = '';
+contents.innerHTML = '';
 
-      const tab1 = document.createElement('button'); tab1.innerText = '营运时间';
-      const content1 = document.createElement('div'); content1.className = 'tab-content';
-      content1.innerHTML = renderOpHours(bus);
-      tabs.appendChild(tab1); contents.appendChild(content1);
+// 营运时间 tab
+const tab1 = document.createElement('button');
+tab1.innerHTML = '<i class="fas fa-clock"></i> 营运时间'; // ⏰ 图标
+const content1 = document.createElement('div');
+content1.className = 'tab-content';
+content1.innerHTML = renderOpHours(bus);
+tabs.appendChild(tab1);
+contents.appendChild(content1);
 
-      const tab2 = document.createElement('button'); tab2.innerText = '路线图';
-      const content2 = document.createElement('div'); content2.className = 'tab-content';
-      content2.innerHTML = renderRouteMap(bus);
-      tabs.appendChild(tab2); contents.appendChild(content2);
+// 路线图 tab
+const tab2 = document.createElement('button');
+tab2.innerHTML = '<i class="fas fa-route"></i> 路线图'; // 🛣️ 图标
+const content2 = document.createElement('div');
+content2.className = 'tab-content';
+content2.innerHTML = renderRouteMap(bus);
+tabs.appendChild(tab2);
+contents.appendChild(content2);
 
-      [tab1, tab2].forEach((btn, idx) => {
-        btn.onclick = () => {
-          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-          contents.children[idx].classList.add('active');
-        };
-      });
-      tab1.click();
-      modal.style.display = 'flex';
+// 切换 tab 逻辑
+[tab1, tab2].forEach((btn, idx) => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    contents.children[idx].classList.add('active');
+  };
+});
+
+tab1.click();
+modal.style.display = 'flex';
     }
 
     function renderOpHours(bus) {
@@ -796,7 +817,7 @@
         return `<div class="route-stop">
         <div class="route-text">
           <div class="route-info">
-            ${stopEmoji}${stop.Description}
+            ${stopEmoji}${stop.Description}(${stop.BusStopCode})
             <button class="route-refresh" data-stop="${stop.BusStopCode}" data-bus="${bus.ServiceNo}" data-direction="${bus.Direction}">
               <i class="fas fa-sync-alt"></i>
             </button>
@@ -875,7 +896,7 @@
         const card = document.createElement('div');
         card.className = 'busstop-card';
         card.innerHTML = `<div class="busstop-header">
-  <h3><i class="fas fa-bus"></i> 巴士 ${busCode}<br>
+  <h3><i class="fas fa-bus"></i> ${busCode}<br>
   <i class="fas fa-map-marker-alt"></i> ${originName} <i class="fas fa-long-arrow-alt-right"></i> ${destName}</h3>
 </div>
 <div class="separator"></div><div class="bus-list show"></div>`;
@@ -927,7 +948,7 @@
         if (m.BusStopCode) {
           html += `<div class="busstop-card" style="cursor:pointer;" data-stop="${m.BusStopCode}">${m.Description} (${m.BusStopCode})</div>`;
         } else {
-          html += `<div class="busstop-card" style="cursor:pointer;" data-bus="${m.ServiceNo}">巴士 ${m.ServiceNo}</div>`;
+          html += `<div class="busstop-card" style="cursor:pointer;" data-bus="${m.ServiceNo}"> ${m.ServiceNo}</div>`;
         }
       });
       searchSection.innerHTML = '<h3>搜索结果</h3>' + html;
@@ -1020,7 +1041,7 @@
 
           busDiv.innerHTML = `
   <span>
-    <i class="fas fa-bus"></i>${bus.ServiceNo} ${arrivalText1}<br>
+    <i class="fas fa-bus"></i> ${bus.ServiceNo} ${arrivalText1}<br>
     <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
   </span>
   <span class="star ${isFav ? '' : 'unfilled'}" 
@@ -1058,7 +1079,7 @@
     document.getElementById('searchInput').addEventListener('input', function () {
       if (this.value.trim() === '') {
         currentView = 'default';
-        renderAllSections();
+        //renderAllSections();
         resumeAutoRefresh();
       } else {
         currentView = 'search';
@@ -1143,7 +1164,7 @@
           const uniqueBusNos = [...new Set(busMatches.map(b => b.ServiceNo))];
           uniqueBusNos.forEach(busNo => {
             html += `<div class="busstop-card" data-bus="${busNo}">
-      <i class="fas fa-bus"></i> 巴士 ${busNo}
+      <i class="fas fa-bus"></i> ${busNo}
     </div>`;
           });
         }
