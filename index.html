@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Singapore Bus</title>
+<title>公交站查询与收藏</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
 
 <style>
@@ -149,6 +149,8 @@ button:hover {
     margin-top:10px; 
     font-size:15px; 
 }
+
+/* ===== 路线图改用 Font Awesome 圆点 ===== */
 .route-stop {
     margin-bottom: 5px;
 }
@@ -179,6 +181,8 @@ button:hover {
     font-size: 12px;
     color: #666;
 }
+
+/* 其它样式保持原样 */
 .op-table { 
     border-collapse: collapse; 
     margin-top:5px; 
@@ -247,6 +251,7 @@ button:hover {
 
 <div class="busstop-container" id="busstopContainer"></div>
 
+<!-- 弹窗 -->
 <div class="modal" id="busModal">
   <div class="modal-content">
     <span class="modal-close" id="modalClose">&times;</span>
@@ -296,10 +301,12 @@ async function getBusArrivalTimes(busStopCode) {
 }
 
 function getNextBuses(busStopCode){
+  // 使用您提供的方法去重
   const matchedRoutes = busRoutes
     .filter(route => route.BusStopCode === busStopCode)
     .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
   
+  // 去重处理
   const uniqueBuses = [];
   const seen = new Set();
   
@@ -337,26 +344,32 @@ function getNearbyBusStops(limit=20){
     const dist=haversine(userPosition.lat,userPosition.lng,bs.Latitude,bs.Longitude);
     return {...bs,distance:dist};
   }).sort((a,b)=>a.distance-b.distance)
-    .filter(bs => bs.distance <= 500)
+    .filter(bs => bs.distance <= 500) // 只显示500米以内的巴士站
     .slice(0,limit);
 }
+
+// ---------- 收藏操作 ----------
 
 function toggleFavorite(busStopCode, bus) {
   const idx = favoriteBuses.findIndex(f => f.BusStopCode === busStopCode && f.bus.ServiceNo === bus.ServiceNo);
   const isFavorite = idx >= 0;
 
   if (isFavorite) {
+    // 取消收藏
     favoriteBuses.splice(idx, 1);
   } else {
+    // 添加收藏
     favoriteBuses.push({ BusStopCode: busStopCode, bus });
   }
   saveFavorites();
 
+  // 更新星星显示：附近、搜索、收藏中所有对应星星
   document.querySelectorAll(`.star[data-bus="${bus.ServiceNo}"][data-stop="${busStopCode}"]`).forEach(star => {
     if (isFavorite) star.classList.add('unfilled');
     else star.classList.remove('unfilled');
   });
 
+  // 更新“我的收藏”列表
   const favoriteSection = document.getElementById('favoriteSection');
 
 if (!isFavorite) {
@@ -374,7 +387,7 @@ if (!isFavorite) {
   const busDiv = document.createElement('div');
   busDiv.className = 'bus-item';
   busDiv.innerHTML = `
-    <span><i class="fas fa-bus"></i> ${bus.ServiceNo} --<br>→${bus.Destination} -- --</span>
+    <span><i class="fas fa-bus"></i>${bus.ServiceNo} --<br> <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} -- --</span>
     <span class="star" data-bus="${bus.ServiceNo}" data-stop="${busStopCode}">&#9733;</span>
   `;
 
@@ -386,26 +399,43 @@ if (!isFavorite) {
   listDiv.appendChild(busDiv);
   favoriteSection.appendChild(card);
 } else {
+    // 从收藏中移除
     const card = favoriteSection.querySelector(`.busstop-card[data-stop="${busStopCode}"]`);
     if (card) favoriteSection.removeChild(card);
   }
 }
 
+// 刷新所有已显示巴士站的到站时间
+
+// 修复的 refreshTimesOnly 函数 - 保留巴士方向信息
 async function refreshTimesOnly() {
   const allCards = document.querySelectorAll('.busstop-card');
 
   for (const card of allCards) {
     const busItems = card.querySelectorAll('.bus-item');
-
     const header = card.querySelector('.busstop-header p');
     if (!header) continue;
-    const busStopCode = header.textContent.split(' ')[0];
-
+    
+    // 提取巴士站代码
+    const headerText = header.textContent;
+    const busStopCodeMatch = headerText.match(/(\d+)/);
+    if (!busStopCodeMatch) continue;
+    
+    const busStopCode = busStopCodeMatch[0];
     const arrivalData = await getBusArrivalTimes(busStopCode);
 
     busItems.forEach(busDiv => {
-      const span = busDiv.querySelector('span');
-      const busNo = busDiv.querySelector('.star').dataset.bus;
+      const span = busDiv.querySelector('span:first-child');
+      const starEl = busDiv.querySelector('.star');
+      if (!span || !starEl) return;
+      
+      const busNo = starEl.dataset.bus;
+      const busStopCode = starEl.dataset.stop;
+      if (!busNo || !busStopCode) return;
+
+      // 关键修改：从原始数据中获取完整的巴士信息（包括方向）
+      const busInfo = getNextBuses(busStopCode).find(b => b.ServiceNo === busNo);
+      if (!busInfo) return;
 
       let arrivalText1 = '--';
       let arrivalText2 = '--';
@@ -429,13 +459,19 @@ async function refreshTimesOnly() {
         }
       }
 
-      const busData = busServices.find(b => b.ServiceNo === busNo);
-      span.innerHTML = `<i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
-<i class="fas fa-arrow-circle-right"></i> ${busData?.Destination || '--'} ${arrivalText2} ${arrivalText3}`;
+      // 使用完整的巴士信息，保留目的地
+      const destination = busInfo.Destination || '--';
+      
+      // 更新显示内容
+      span.innerHTML = `
+        <i class="fas fa-bus"></i>${busNo} ${arrivalText1}<br>
+        <i class="fas fa-arrow-circle-right"></i> ${destination} ${arrivalText2} ${arrivalText3}
+      `;
     });
   }
 }
 
+// 更新巴士时间
 async function updateBusTimes(card, busStopCode) {
   const arrivalData = await getBusArrivalTimes(busStopCode);
   const busItems = card.querySelectorAll('.bus-item');
@@ -444,6 +480,7 @@ async function updateBusTimes(card, busStopCode) {
     const busText = busItem.querySelector('span');
     const busNo = busText.textContent.split(' ')[0];
     
+    // 获取实时到达时间
     let arrivalText1 = '--';
     let arrivalText2 = '--';
     let arrivalText3 = '--';
@@ -473,12 +510,13 @@ async function updateBusTimes(card, busStopCode) {
     }
     
     busText.innerHTML = `
-  <i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
+  <i class="fas fa-bus"></i>${busNo} ${arrivalText1}<br>
   <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
 `;
   });
 }
 
+// ---------- 渲染所有部分 ----------
 async function renderAllSections() {
   if (currentView === 'default') {
     await renderFavorites();
@@ -492,6 +530,8 @@ async function renderAllSections() {
     document.getElementById('searchSection').style.display = 'block';
   }
 }
+
+// ---------- 渲染收藏 ----------
 
 async function renderFavorites() {
   const section = document.getElementById('favoriteSection');
@@ -515,10 +555,11 @@ async function renderFavorites() {
     const bs = busStops.find(b => b.BusStopCode === stopCode);
     if (!bs) continue;
 
+    // 计算距离（如果有定位）
     let distance = null;
     if (userPosition) {
       distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
-      if (distance > 1000) continue;
+      if (distance > 1000) continue; // 超过1000米不显示
     }
 
     const distanceText = distance ? `${Math.round(distance)}m` : '';
@@ -545,7 +586,7 @@ async function renderFavorites() {
       busDiv.className = 'bus-item';
       busDiv.innerHTML = `
   <span>
-    <i class="fas fa-bus"></i> ${bus.ServiceNo} --<br>
+    <i class="fas fa-bus"></i>${bus.ServiceNo} --<br>
     <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} -- --
   </span>
   <span class="star" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
@@ -560,6 +601,7 @@ async function renderFavorites() {
       busDiv.onclick = () => showBusModal(bus);
     });
 
+    // 异步获取实时到站数据并更新
     (async (listDiv, stopCode) => {
       const arrivalData = await getBusArrivalTimes(stopCode);
       listDiv.querySelectorAll('.bus-item').forEach(busDiv => {
@@ -596,6 +638,7 @@ async function renderFavorites() {
   }
 }
 
+// ---------- 渲染附近站点 ----------
 async function renderNearbyStops(){
   const section = document.getElementById('nearbySection');
   section.innerHTML = '<h3>附近巴士</h3>';
@@ -613,11 +656,14 @@ async function renderNearbyStops(){
     const card=document.createElement('div'); 
     card.className='busstop-card';
     
+    // 获取该站所有巴士（去重）
     let buses=getNextBuses(bs.BusStopCode);
+    // 收藏的置顶
     const favBuses=favoriteBuses.filter(f=>f.BusStopCode===bs.BusStopCode).map(f=>f.bus);
     const otherBuses=buses.filter(b=>!favBuses.some(f=>f.ServiceNo===b.ServiceNo));
     buses=[...favBuses,...otherBuses];
     
+    // 获取实时数据
     const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
     
     card.innerHTML = `
@@ -640,6 +686,7 @@ async function renderNearbyStops(){
       const busDiv=document.createElement('div'); 
       busDiv.className='bus-item';
       
+      // 获取实时到达时间
       let arrivalText1 = '--';
       let arrivalText2 = '--';
       let arrivalText3 = '--';
@@ -670,7 +717,7 @@ async function renderNearbyStops(){
       
       busDiv.innerHTML = `
   <span>
-    <i class="fas fa-bus"></i> ${bus.ServiceNo} ${arrivalText1}<br>
+    <i class="fas fa-bus"></i>${bus.ServiceNo} ${arrivalText1}<br>
     <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
   </span>
   <span class="star ${isFav ? '' : 'unfilled'}" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
@@ -693,6 +740,7 @@ async function renderNearbyStops(){
   }
 }
 
+// ---------- 弹窗 ----------
 function showBusModal(bus){
   const modal=document.getElementById('busModal');
   document.getElementById('modalBusNo').innerText=`巴士 ${bus.ServiceNo}`;
@@ -700,11 +748,13 @@ function showBusModal(bus){
   const contents=document.getElementById('modalTabContents');
   tabs.innerHTML=''; contents.innerHTML='';
 
+  // Tab 1: 营运时间
   const tab1=document.createElement('button'); tab1.innerText='营运时间';
   const content1=document.createElement('div'); content1.className='tab-content';
   content1.innerHTML=renderOpHours(bus);
   tabs.appendChild(tab1); contents.appendChild(content1);
 
+  // Tab 2: 路线
   const tab2=document.createElement('button'); tab2.innerText='路线图';
   const content2=document.createElement('div'); content2.className='tab-content';
   content2.innerHTML=renderRouteMap(bus);
@@ -720,6 +770,7 @@ function showBusModal(bus){
   modal.style.display='flex';
 }
 
+// 营运时间表
 function renderOpHours(bus){
   return `<table class="op-table">
     <tr><th>类型</th><th>首班车</th><th>末班车</th></tr>
@@ -729,10 +780,12 @@ function renderOpHours(bus){
   </table>`;
 }
 
+// 路线图
+
 function renderRouteMap(bus) {
   const matchedRoutes = busRoutes
     .filter(route => route.ServiceNo === bus.ServiceNo && route.Direction === bus.Direction)
-    .sort((a, b) => a.StopSequence - b.StopSequence); 
+    .sort((a, b) => a.StopSequence - b.StopSequence); // 按站点顺序排序
   
   let nearestStopCode = null;
   if(userPosition){
@@ -753,6 +806,7 @@ function renderRouteMap(bus) {
       const stop=busStops.find(bs=>bs.BusStopCode===route.BusStopCode);
       if(!stop) return '';
       const isCurrentStop = stop.BusStopCode === nearestStopCode;
+      // 关键：用 Emoji 替代 CSS 圆点，直接跟在站名前
       const stopEmoji = isCurrentStop ? "🔴 " : "🔵 "; 
       
       return `<div class="route-stop">
@@ -769,6 +823,8 @@ function renderRouteMap(bus) {
     }).join('')
   }</div>`;
 }
+
+// 点击路线图上的刷新按钮
 
 document.addEventListener("click", async e => {
   const refreshBtn = e.target.closest('.route-refresh');
@@ -801,10 +857,13 @@ document.addEventListener("click", async e => {
   }
 });
 
+// ---------- 事件绑定 ----------
+
 document.getElementById('modalClose').onclick = () => {
   document.getElementById('busModal').style.display = 'none';
 };
 
+// 搜索按钮点击逻辑，触发模糊匹配
 document.getElementById('searchBtn').onclick = async () => {
   const val = searchInput.value.trim();
   if (!val) {
@@ -815,17 +874,20 @@ document.getElementById('searchBtn').onclick = async () => {
 
   currentView = 'search';
   
+  // 触发 input 事件执行模糊匹配
   searchInput.dispatchEvent(new Event('input'));
 };
+
+// 渲染搜索巴士结果
 
 async function renderSearchBuses(busCode, routes) {
   const section = document.getElementById('searchSection');
   section.innerHTML = '<h3>搜索结果</h3>';
   
-  if(routes.length === 0){
-    const empty=document.createElement('div');
-    empty.className='busstop-card';
-    empty.innerHTML='<p>没有找到相关结果</p>';
+  if (routes.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'busstop-card';
+    empty.innerHTML = '<p>没有找到相关结果</p>';
     section.appendChild(empty);
     return;
   }
@@ -833,37 +895,55 @@ async function renderSearchBuses(busCode, routes) {
   const directions = [...new Set(routes.map(r => r.Direction))];
   
   for (const direction of directions) {
-    const card=document.createElement('div'); 
-    card.className='busstop-card';
+    // 找 busServices 里对应的服务
+    const svc = busServices.find(s => s.ServiceNo === busCode && s.Direction === direction);
+
+    const originStop = busStops.find(bs => bs.BusStopCode === svc?.OriginCode);
+    const destStop = busStops.find(bs => bs.BusStopCode === svc?.DestinationCode);
+
+    const originName = originStop ? originStop.Description : '未知起点';
+    const destName = destStop ? destStop.Description : '未知终点';
+
+    const card = document.createElement('div'); 
+    card.className = 'busstop-card';
     
-    card.innerHTML=`<div class="busstop-header">
-      <h3>巴士 ${busCode} - 方向 ${direction}</h3>
-    </div><div class="separator"></div><div class="bus-list show"></div>`;
+    card.innerHTML = `<div class="busstop-header">
+  <h3><i class="fas fa-bus"></i> 巴士 ${busCode}<br>
+  <i class="fas fa-map-marker-alt"></i> ${originName} <i class="fas fa-long-arrow-alt-right"></i> ${destName}</h3>
+</div>
+<div class="separator"></div><div class="bus-list show"></div>`;
     
-    const listDiv=card.querySelector('.bus-list');
+    const listDiv = card.querySelector('.bus-list');
     
-    const busDiv=document.createElement('div'); 
-    busDiv.className='bus-item';
-    busDiv.innerHTML=`<span>点击查看路线图</span>`;
-    busDiv.onclick=()=>{
-      const tempBus = {
-        ServiceNo: busCode,
-        Direction: direction,
-        WD_FirstBus: '--',
-        WD_LastBus: '--',
-        SAT_FirstBus: '--',
-        SAT_LastBus: '--',
-        SUN_FirstBus: '--',
-        SUN_LastBus: '--'
-      };
-      showBusModal(tempBus);
-    };
+    const busDiv = document.createElement('div'); 
+    busDiv.className = 'bus-item';
+    busDiv.innerHTML = `<span>点击查看路线图</span>`;
+busDiv.onclick = () => {
+  // 找到该路线、该方向的起点站
+  const originStopData = busRoutes.find(r => r.ServiceNo === busCode && r.Direction === direction && r.StopSequence === 1);
+  
+  const tempBus = {
+    ServiceNo: busCode,
+    Direction: direction,
+    OriginName: originName,
+    DestinationName: destName,
+    WD_FirstBus: originStopData?.WD_FirstBus || '--',
+    WD_LastBus: originStopData?.WD_LastBus || '--',
+    SAT_FirstBus: originStopData?.SAT_FirstBus || '--',
+    SAT_LastBus: originStopData?.SAT_LastBus || '--',
+    SUN_FirstBus: originStopData?.SUN_FirstBus || '--',
+    SUN_LastBus: originStopData?.SUN_LastBus || '--'
+  };
+  
+  showBusModal(tempBus);
+};
     listDiv.appendChild(busDiv);
     
     section.appendChild(card);
   }
 }
 
+// 模糊匹配
 const searchInput=document.getElementById('searchInput');
 const searchSection=document.getElementById('searchSection');
 
@@ -892,6 +972,7 @@ searchInput.addEventListener('input', ()=>{
   searchSection.innerHTML='<h3>搜索结果</h3>'+html;
   searchSection.style.display='block';
 
+  // 点击匹配项
   searchSection.querySelectorAll('.busstop-card').forEach(el=>{
     el.onclick=async ()=>{
       if(el.dataset.stop){
@@ -907,6 +988,7 @@ searchInput.addEventListener('input', ()=>{
   });
 });
 
+// 渲染搜索巴士站结果
 async function renderSearchResults(stops) {
   const section = document.getElementById('searchSection');
   section.innerHTML = '<h3>搜索结果</h3>';
@@ -927,8 +1009,10 @@ if(userPosition && !bs.distance){
       bs.distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
     }
     
+    // 获取该站所有巴士（去重）
     let buses=getNextBuses(bs.BusStopCode);
     
+    // 获取实时数据
     const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
     
     card.innerHTML = `
@@ -951,6 +1035,7 @@ if(userPosition && !bs.distance){
       const busDiv=document.createElement('div'); 
       busDiv.className='bus-item';
       
+      // 获取实时到达时间
       let arrivalText1 = '--';
       let arrivalText2 = '--';
       let arrivalText3 = '--';
@@ -981,7 +1066,7 @@ if(userPosition && !bs.distance){
       
       busDiv.innerHTML = `
   <span>
-    <i class="fas fa-bus"></i> ${bus.ServiceNo} ${arrivalText1}<br>
+    <i class="fas fa-bus"></i>${bus.ServiceNo} ${arrivalText1}<br>
     <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
   </span>
   <span class="star ${isFav ? '' : 'unfilled'}" 
@@ -1011,30 +1096,17 @@ document.getElementById('refreshBtn').onclick=()=>{
   }
 };
 
-function startAutoRefresh() {
-  stopAutoRefresh(); 
-let refreshInterval = setInterval(() => {
-  if(currentView === 'default') {
-    refreshTimesOnly(); 
-  }
-}, 10000);
-}
-
-function stopAutoRefresh() {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-    refreshInterval = null;
-  }
-}
-
+// 暂停自动刷新（搜索时调用）
 function pauseAutoRefresh() {
   stopAutoRefresh();
 }
 
+// 恢复自动刷新（回到默认视图时调用）
 function resumeAutoRefresh() {
   if (!refreshInterval) startAutoRefresh();
 }
 
+// 搜索框监听
 document.getElementById('searchInput').addEventListener('input', function() {
   if (this.value.trim() === '') {
     currentView = 'default';
@@ -1058,32 +1130,38 @@ function showDefaultView() {
   searchSection.style.display = 'none';
 }
 
+// ---------- 初始化 ----------
 (async function(){ 
   await loadData();
   if(navigator.geolocation){ 
     navigator.geolocation.getCurrentPosition(pos=>{
       userPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
       renderAllSections();
-      startAutoRefresh();
+      startAutoRefresh(); // 开始自动刷新
     }, () => {
+      // 如果定位失败，显示所有站点
       renderAllSections();
-      startAutoRefresh(); 
+      startAutoRefresh(); // 开始自动刷新
     }); 
   } else {
+    // 如果没有定位权限，显示所有站点
     renderAllSections();
-    startAutoRefresh(); 
+    startAutoRefresh(); // 开始自动刷新
   }
+
+// ----------------- 搜索逻辑 -----------------
 
 let autoRefreshTimer = null;
 let currentView = 'default';
-let expandedStopCode = null; 
+let expandedStopCode = null; // 当前展开的巴士站代码
 
 function startAutoRefresh() {
   stopAutoRefresh();
   autoRefreshTimer = setInterval(async () => {
     if (currentView === 'default') {
-      renderAllSections(); 
+      refreshTimesOnly(); // 默认列表刷新
     } else if (currentView === 'search-result' && expandedStopCode) {
+      // 只刷新展开的巴士站时间
       await refreshBusStopTimes(expandedStopCode);
     }
   }, 10000);
@@ -1096,6 +1174,7 @@ function stopAutoRefresh() {
   }
 }
 
+// 搜索输入事件
 searchInput.addEventListener('input', async function () {
   const val = this.value.trim();
 
@@ -1113,56 +1192,69 @@ searchInput.addEventListener('input', async function () {
   }
 });
 
+// 搜索完成
 async function performSearch(val) {
-  searchSection.innerHTML = '<h3>搜索结果</h3>';
 
-  const busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
-  const stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.includes(val));
+searchSection.innerHTML = '<h3>搜索结果</h3>';
 
-  let html = '';
-  if (busMatches.length) {
-    html += '<h4>巴士号</h4>';
-    busMatches.forEach(b => {
-      html += `<div class="busstop-card" data-bus="${b.ServiceNo}">巴士 ${b.ServiceNo}</div>`;
-    });
-  }
-  if (stopMatches.length) {
-    html += '<h4>巴士站</h4>';
-    stopMatches.forEach(s => {
-      html += `<div class="busstop-card" data-stop="${s.BusStopCode}">${s.Description} (${s.BusStopCode})</div>`;
-    });
-  }
-  if (!busMatches.length && !stopMatches.length) {
-    html += '<p>没有找到相关结果</p>';
-  }
+const busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
+const stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.includes(val));
 
-  searchSection.innerHTML += html;
+let html = '';
+
+if (busMatches.length) {
+  const uniqueBusNos = [...new Set(busMatches.map(b => b.ServiceNo))];
+  uniqueBusNos.forEach(busNo => {
+    html += `<div class="busstop-card" data-bus="${busNo}">
+      <i class="fas fa-bus"></i> 巴士 ${busNo}
+    </div>`;
+  });
+}
+
+if (stopMatches.length) {
+  stopMatches.forEach(s => {
+    html += `<div class="busstop-card" data-stop="${s.BusStopCode}">
+      <i class="fas fa-map-pin"></i> ${s.Description} (${s.BusStopCode})
+    </div>`;
+  });
+}
+
+if (!html) {
+  html = '<p>没有找到相关结果</p>';
+}
+
+searchSection.innerHTML += html;
 
   currentView = 'search-result';
   startAutoRefresh();
 }
 
+// 点击条目展开
 searchSection.addEventListener('click', async (e) => {
   const el = e.target.closest('.busstop-card');
   if (!el) return;
 
   if (el.dataset.bus) {
-    expandedStopCode = null; 
+    // 如果你想展开巴士号详细信息，可以在这里处理
+    expandedStopCode = null; // 不刷新单个站
     const svc = el.dataset.bus;
     const routes = busRoutes.filter(r => r.ServiceNo === svc);
     await renderSearchBuses(svc, routes);
   } else if (el.dataset.stop) {
-    expandedStopCode = el.dataset.stop; 
+    expandedStopCode = el.dataset.stop; // 记录当前展开的巴士站
     const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
     if (bs) await renderSearchResults([bs]);
   }
 });
 
+// 刷新展开的巴士站到站时间
 async function refreshBusStopTimes(stopCode) {
   const bs = busStops.find(b => b.BusStopCode === stopCode);
   if (!bs) return;
-  await renderSearchResults([bs]); 
+  await renderSearchResults([bs]); // 只刷新时间信息
 }
+
+// 初始化自动刷新
 startAutoRefresh();
 
 })();
