@@ -218,32 +218,35 @@
     }
 
 
- .op-table {
-  border-collapse: collapse;
-  margin-top: 5px;
-  font-size: 14px;
-  width: 100%; /* 撑满容器，方便分配列宽 */
-}
+    .op-table {
+      border-collapse: collapse;
+      margin-top: 5px;
+      font-size: 14px;
+      width: 100%;
+      /* 撑满容器，方便分配列宽 */
+    }
 
-.op-table th,
-.op-table td {
-  border: 1px solid #ccc;
-  padding: 3px 8px;
-  text-align: center;
-}
+    .op-table th,
+    .op-table td {
+      border: 1px solid #ccc;
+      padding: 3px 8px;
+      text-align: center;
+    }
 
-.op-table td:first-child {
-  text-align: left;
-  width: 40%;   /* 类型列窄一点 */
- text-align: center;
-}
+    .op-table td:first-child {
+      text-align: left;
+      width: 40%;
+      /* 类型列窄一点 */
+      text-align: center;
+    }
 
-.op-table th:nth-child(2),
-.op-table td:nth-child(2),
-.op-table th:nth-child(3),
-.op-table td:nth-child(3) {
-  width: 30%;   /* 首班车/末班车列更宽 */
-}
+    .op-table th:nth-child(2),
+    .op-table td:nth-child(2),
+    .op-table th:nth-child(3),
+    .op-table td:nth-child(3) {
+      width: 30%;
+      /* 首班车/末班车列更宽 */
+    }
 
     #backBtn {
       display: none;
@@ -747,39 +750,39 @@
     function showBusModal(bus) {
       const modal = document.getElementById('busModal');
       document.getElementById('modalBusNo').innerHTML = `<i class="fas fa-bus"></i> ${bus.ServiceNo}`;
-const tabs = document.getElementById('modalTabs');
-const contents = document.getElementById('modalTabContents');
-tabs.innerHTML = '';
-contents.innerHTML = '';
+      const tabs = document.getElementById('modalTabs');
+      const contents = document.getElementById('modalTabContents');
+      tabs.innerHTML = '';
+      contents.innerHTML = '';
 
-// 营运时间 tab
-const tab1 = document.createElement('button');
-tab1.innerHTML = '<i class="fas fa-clock"></i> 营运时间'; // ⏰ 图标
-const content1 = document.createElement('div');
-content1.className = 'tab-content';
-content1.innerHTML = renderOpHours(bus);
-tabs.appendChild(tab1);
-contents.appendChild(content1);
+      // 营运时间 tab
+      const tab1 = document.createElement('button');
+      tab1.innerHTML = '<i class="fas fa-clock"></i> 营运时间'; // ⏰ 图标
+      const content1 = document.createElement('div');
+      content1.className = 'tab-content';
+      content1.innerHTML = renderOpHours(bus);
+      tabs.appendChild(tab1);
+      contents.appendChild(content1);
 
-// 路线图 tab
-const tab2 = document.createElement('button');
-tab2.innerHTML = '<i class="fas fa-route"></i> 路线图'; // 🛣️ 图标
-const content2 = document.createElement('div');
-content2.className = 'tab-content';
-content2.innerHTML = renderRouteMap(bus);
-tabs.appendChild(tab2);
-contents.appendChild(content2);
+      // 路线图 tab
+      const tab2 = document.createElement('button');
+      tab2.innerHTML = '<i class="fas fa-route"></i> 路线图'; // 🛣️ 图标
+      const content2 = document.createElement('div');
+      content2.className = 'tab-content';
+      content2.innerHTML = renderRouteMap(bus);
+      tabs.appendChild(tab2);
+      contents.appendChild(content2);
 
-// 切换 tab 逻辑
-[tab1, tab2].forEach((btn, idx) => {
-  btn.onclick = () => {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    contents.children[idx].classList.add('active');
-  };
-});
+      // 切换 tab 逻辑
+      [tab1, tab2].forEach((btn, idx) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          contents.children[idx].classList.add('active');
+        };
+      });
 
-tab1.click();
-modal.style.display = 'flex';
+      tab1.click();
+      modal.style.display = 'flex';
     }
 
     function renderOpHours(bus) {
