@@ -1,68 +1,107 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SG Bus</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      crossorigin="anonymous" />
-    <style>
-      .bus-no, .busstop-name, .text-bold-lg, .icon-lg { 
-      font-weight: bold; 
-      font-size: 20px; 
-      }
-      .text-sm, .icon-sm { font-size: 13px; }
-      .bus-time-main, .text-time-main { 
-      font-size: 14px; 
-      display: inline-block; 
-      width: 240px; 
-      text-align: right; 
-      vertical-align: middle; 
-      }
-      .bus-time-sub, .bus-dest { font-size: 14px; }
-      .busstop-info { font-size: 16px; }
-      .star { cursor: pointer; font-size: 26px; color: #ffcc00; }
-      .star.unfilled { color: #ccc; }
-      .hourglass-spin {
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SG Bus</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    crossorigin="anonymous" />
+  <style>
+    .bus-no,
+    .busstop-name,
+    .text-bold-lg,
+    .icon-lg {
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .text-sm,
+    .icon-sm {
+      font-size: 13px;
+    }
+
+    .bus-time-main,
+    .text-time-main {
+      font-size: 14px;
+      display: inline-block;
+      width: 240px;
+      text-align: right;
+      vertical-align: middle;
+    }
+
+    .bus-time-sub,
+    .bus-dest {
+      font-size: 14px;
+    }
+
+    .busstop-info {
+      font-size: 16px;
+    }
+
+    .star {
+      cursor: pointer;
+      font-size: 26px;
+      color: #ffcc00;
+    }
+
+    .star.unfilled {
+      color: #ccc;
+    }
+
+    .hourglass-spin {
       animation: spin 5s linear infinite;
       display: inline-block;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
       }
-      @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+
+      to {
+        transform: rotate(360deg);
       }
-      .route-refresh.rotate {
+    }
+
+    .route-refresh.rotate {
       animation: clickRotate 0.5s ease;
-      }
-      .route-refresh.loading {
+    }
+
+    .route-refresh.loading {
       animation: spin 1s linear infinite;
       color: #0056b3;
-      }
-      body {
+    }
+
+    body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 10px;
       background: #f5f5f5;
-      }
-      h2 {
+    }
+
+    h2 {
       text-align: center;
       margin-bottom: 10px;
-      }
-      .controls {
+    }
+
+    .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
       margin-bottom: 10px;
-      }
-      input,
-      button {
+    }
+
+    input,
+    button {
       padding: 6px 10px;
       font-size: 14px;
       border-radius: 5px;
       border: 1px solid #ccc;
-      }
-      button {
+    }
+
+    button {
       cursor: pointer;
       background: #007bff;
       color: #fff;
@@ -70,33 +109,60 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      }
-      button:hover {
+    }
+
+    button:hover {
       background: #0056b3;
-      }
-      .busstop-container { display: flex; flex-direction: column; }
-      .busstop-card {
+    }
+
+    .busstop-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .busstop-card {
       background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
       padding: 15px;
       border-radius: 8px;
       margin-bottom: 10px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .busstop-header { cursor: pointer; }
-      .busstop-header h3 { margin: 0; font-size: 18px; }
-      .busstop-header p { margin: 2px 0; color: #666; font-size: 14px; }
-      .separator {
+    }
+
+    .busstop-header {
+      cursor: pointer;
+    }
+
+    .busstop-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .busstop-header p {
+      margin: 2px 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .separator {
       border-top: 1px solid #ccc;
       margin: 8px 0;
       display: none;
-      }
-      .bus-list {
+    }
+
+    .bus-list {
       display: none;
       flex-direction: column;
-      }
-      .bus-list.show { display: flex; }
-      .bus-list.show + .separator { display: block; }
-      .bus-item {
+    }
+
+    .bus-list.show {
+      display: flex;
+    }
+
+    .bus-list.show+.separator {
+      display: block;
+    }
+
+    .bus-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -104,17 +170,21 @@
       background: rgba(255, 255, 255, 0.9);
       border-top: 1px solid rgba(187, 222, 251, 0.5);
       cursor: pointer;
-      }
-      .modal {
+    }
+
+    .modal {
       display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0, 0, 0, 0.5);
       justify-content: center;
       align-items: center;
-      }
-      .modal-content {
+    }
+
+    .modal-content {
       background: #fff;
       padding: 20px;
       border-radius: 10px;
@@ -122,35 +192,58 @@
       max-width: 500px;
       max-height: 90%;
       overflow: auto;
-      }
-      .modal-close {
+    }
+
+    .modal-close {
       float: right;
       cursor: pointer;
       font-size: 32px;
-      }
-      .tab {
+    }
+
+    .tab {
       display: flex;
       justify-content: center;
       gap: 10px;
       margin-top: 10px;
-      }
-      .tab button { flex: 1; text-align: center; }
-      .tab-content { display: none; margin-top: 10px; }
-      .tab-content.active { display: block; }
-      .route-map { margin-top: 10px; font-size: 15px; }
-      .route-stop { margin-bottom: 5px; }
-      .route-text {
+    }
+
+    .tab button {
+      flex: 1;
+      text-align: center;
+    }
+
+    .tab-content {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .route-map {
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .route-stop {
+      margin-bottom: 5px;
+    }
+
+    .route-text {
       margin-left: 8px;
       flex: 1;
       display: flex;
       flex-direction: column;
-      }
-      .route-info {
+    }
+
+    .route-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      }
-      .route-refresh {
+    }
+
+    .route-refresh {
       margin-left: 10px;
       background: transparent;
       border: none;
@@ -161,289 +254,335 @@
       outline: none;
       border-radius: 0;
       transition: transform 0.5s ease;
-      }
-      .route-refresh:active,
-      .route-refresh:focus,
-      .route-refresh:hover { 
+    }
+
+    .route-refresh:active,
+    .route-refresh:focus,
+    .route-refresh:hover {
       background: transparent !important;
-      color: #007bff !important; 
-      }
-      .route-refresh.rotate { 
+      color: #007bff !important;
+    }
+
+    .route-refresh.rotate {
       animation: clickRotate 0.5s ease;
+    }
+
+    @keyframes clickRotate {
+      from {
+        transform: rotate(0deg);
       }
-      @keyframes clickRotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+
+      to {
+        transform: rotate(360deg);
       }
-      .route-refresh.loading { 
-      animation: spin 1s linear infinite; 
-      color: #0056b3; 
-      }
-      .route-times { 
-      margin-top: 3px; font-size: 12px; 
-      color: #666; 
-      }
-      .op-table {
+    }
+
+    .route-refresh.loading {
+      animation: spin 1s linear infinite;
+      color: #0056b3;
+    }
+
+    .route-times {
+      margin-top: 3px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .op-table {
       border-collapse: collapse;
       margin-top: 5px;
       font-size: 14px;
       width: 100%;
-      }
-      .op-table th,
-      .op-table td {
+    }
+
+    .op-table th,
+    .op-table td {
       border: 1px solid #ccc;
       padding: 3px 8px;
       text-align: center;
-      }
-      .op-table td:first-child { 
-      width: 40%; 
-      text-align: center; 
-      }
-      .op-table th:nth-child(2),
-      .op-table td:nth-child(2),
-      .op-table th:nth-child(3),
-      .op-table td:nth-child(3) { width: 30%; }
-      #backBtn { display: none; margin: 10px auto; }
-      .refresh-time { font-size: 12px; color: #666; margin-left: 10px; }
-      .search-section { margin-bottom: 15px; }
-      #searchBtn { display: none; }
-      .responsive-wrapper {
+    }
+
+    .op-table td:first-child {
+      width: 40%;
+      text-align: center;
+    }
+
+    .op-table th:nth-child(2),
+    .op-table td:nth-child(2),
+    .op-table th:nth-child(3),
+    .op-table td:nth-child(3) {
+      width: 30%;
+    }
+
+    #backBtn {
+      display: none;
+      margin: 10px auto;
+    }
+
+    .refresh-time {
+      font-size: 12px;
+      color: #666;
+      margin-left: 10px;
+    }
+
+    .search-section {
+      margin-bottom: 15px;
+    }
+
+    #searchBtn {
+      display: none;
+    }
+
+    .responsive-wrapper {
       max-width: 480px;
       margin: 0 auto;
       padding: 10px;
+    }
+
+    @media screen and (min-width: 768px) {
+      .responsive-wrapper {
+        max-width: 700px;
       }
-      @media screen and (min-width: 768px) { .responsive-wrapper { max-width: 700px; } }
-      @media screen and (min-width: 1024px) { .responsive-wrapper { max-width: 900px; } }
-    </style>
-  </head>
-  <body>
-    <h2><i class="fas fa-bus"></i> Singapore Bus</h2>
-    <div class="controls">
-      <input type="text" id="searchInput" placeholder="输入巴士站号或巴士号">
-      <button id="searchBtn"><i class="fas fa-search"></i> 查询</button>
-      <button id="refreshBtn"><i class="fas fa-location-crosshairs"></i> 刷新</button>
-    </div>
+    }
+
+    @media screen and (min-width: 1024px) {
+      .responsive-wrapper {
+        max-width: 900px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h2><i class="fas fa-bus"></i> Singapore Bus</h2>
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="输入巴士站号或巴士号">
+    <button id="searchBtn"><i class="fas fa-search"></i> 查询</button>
+    <button id="refreshBtn"><i class="fas fa-location-crosshairs"></i> 刷新</button>
+  </div>
+  <div class="favorite-section" id="favoriteSection">
     <div class="favorite-section" id="favoriteSection">
-      <div class="favorite-section" id="favoriteSection">
-  <h3><i class="fas fa-heart"></i> 我的收藏</h3>
-  <div class="busstop-card"><p><i class="far fa-star"></i> 暂无收藏</p></div>
-</div>
-      <div class="busstop-card"></div>
-    </div>
-    <div class="nearby-section" id="nearbySection">
-      <h3><i class="fas fa-map-marker-alt"></i> 附近巴士</h3>
-    </div>
-    <div class="search-section" id="searchSection" style="display:none;">
-      <h3><i class="fas fa-search"></i> 搜索结果</h3>
-    </div>
-    <div class="busstop-container" id="busstopContainer"></div>
-    <div class="modal" id="busModal">
-      <div class="modal-content">
-        <span class="modal-close" id="modalClose">&times;</span>
-        <h3 id="modalBusNo"></h3>
-        <div class="tab" id="modalTabs"></div>
-        <div id="modalTabContents"></div>
+      <h3><i class="fas fa-heart"></i> 我的收藏</h3>
+      <div class="busstop-card">
+        <p><i class="far fa-star"></i> 暂无收藏</p>
       </div>
     </div>
-    <script>
-      const BUS_STOPS_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busStops.json";
-      const BUS_ROUTES_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busRoutes.json";
-      const BUS_SERVICES_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busServices.json";
-      const BUS_ARRIVAL_API = "https://busapi.0515364.xyz/busarrival?BusStopCode=";
-      
-      let busStops = [], busRoutes = [], busServices = [];
-      let userPosition = null;
-      let favoriteBuses = JSON.parse(localStorage.getItem('favoriteBuses') || '[]');
-      let refreshInterval = null;
-      let currentView = 'default'; // 'default', 'search'
-      
-      function saveFavorites() { localStorage.setItem('favoriteBuses', JSON.stringify(favoriteBuses)); }
-      function haversine(lat1, lon1, lat2, lon2) {
-        const R = 6371000, toRad = x => x * Math.PI / 180;
-        const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    <div class="busstop-card"></div>
+  </div>
+  <div class="nearby-section" id="nearbySection">
+    <h3><i class="fas fa-map-marker-alt"></i> 附近巴士</h3>
+  </div>
+  <div class="search-section" id="searchSection" style="display:none;">
+    <h3><i class="fas fa-search"></i> 搜索结果</h3>
+  </div>
+  <div class="busstop-container" id="busstopContainer"></div>
+  <div class="modal" id="busModal">
+    <div class="modal-content">
+      <span class="modal-close" id="modalClose">&times;</span>
+      <h3 id="modalBusNo"></h3>
+      <div class="tab" id="modalTabs"></div>
+      <div id="modalTabContents"></div>
+    </div>
+  </div>
+  <script>
+    const BUS_STOPS_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busStops.json";
+    const BUS_ROUTES_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busRoutes.json";
+    const BUS_SERVICES_URL = "https://raw.githubusercontent.com/bb1026/bus/main/json/busServices.json";
+    const BUS_ARRIVAL_API = "https://busapi.0515364.xyz/busarrival?BusStopCode=";
+
+    let busStops = [], busRoutes = [], busServices = [];
+    let userPosition = null;
+    let favoriteBuses = JSON.parse(localStorage.getItem('favoriteBuses') || '[]');
+    let refreshInterval = null;
+    let currentView = 'default'; // 'default', 'search'
+
+    function saveFavorites() { localStorage.setItem('favoriteBuses', JSON.stringify(favoriteBuses)); }
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371000, toRad = x => x * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    async function loadData() {
+      [busStops, busRoutes, busServices] = await Promise.all([
+        fetch(BUS_STOPS_URL).then(r => r.json()),
+        fetch(BUS_ROUTES_URL).then(r => r.json()),
+        fetch(BUS_SERVICES_URL).then(r => r.json())
+      ]);
+    }
+
+    async function getBusArrivalTimes(busStopCode) {
+      try {
+        const response = await fetch(`${BUS_ARRIVAL_API}${busStopCode}`);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("获取实时数据失败:", error);
+        return null;
       }
-      
-      async function loadData() {
-        [busStops, busRoutes, busServices] = await Promise.all([
-          fetch(BUS_STOPS_URL).then(r => r.json()),
-          fetch(BUS_ROUTES_URL).then(r => r.json()),
-          fetch(BUS_SERVICES_URL).then(r => r.json())
-        ]);
-      }
-      
-      async function getBusArrivalTimes(busStopCode) {
-        try {
-          const response = await fetch(`${BUS_ARRIVAL_API}${busStopCode}`);
-          const data = await response.json();
-          return data;
-        } catch (error) {
-          console.error("获取实时数据失败:", error);
-          return null;
-        }
-      }
-      
-      function getNextBuses(busStopCode) {
+    }
+
+    function getNextBuses(busStopCode) {
       const matchedRoutes = busRoutes
-      .filter(route => route.BusStopCode === busStopCode)
-      .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
-      
+        .filter(route => route.BusStopCode === busStopCode)
+        .sort((a, b) => a.Direction - b.Direction || a.StopSequence - b.StopSequence);
+
       const uniqueBuses = [];
       const seen = new Set();
-      
+
       matchedRoutes.forEach(route => {
-      const key = `${route.ServiceNo}-${route.Direction}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueBuses.push(route);
-      }
+        const key = `${route.ServiceNo}-${route.Direction}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueBuses.push(route);
+        }
       });
-      
+
       return uniqueBuses.map(b => {
-      const svc = busServices.find(s => s.ServiceNo === b.ServiceNo && s.Direction === b.Direction);
-      const destStop = busStops.find(bs => bs.BusStopCode === (svc ? svc.DestinationCode : b.DestinationCode));
-      const originStop = busStops.find(bs => bs.BusStopCode === (svc ? svc.OriginCode : b.BusStopCode));
-      return {
-        ServiceNo: b.ServiceNo,
-        Operator: b.Operator,
-        Direction: b.Direction,
-        Origin: originStop ? `${originStop.Description}` : '',
-        Destination: destStop ? `${destStop.Description}` : '', 
-        ...getBusOperatingHours(b)
-      };
+        const svc = busServices.find(s => s.ServiceNo === b.ServiceNo && s.Direction === b.Direction);
+        const destStop = busStops.find(bs => bs.BusStopCode === (svc ? svc.DestinationCode : b.DestinationCode));
+        const originStop = busStops.find(bs => bs.BusStopCode === (svc ? svc.OriginCode : b.BusStopCode));
+        return {
+          ServiceNo: b.ServiceNo,
+          Operator: b.Operator,
+          Direction: b.Direction,
+          Origin: originStop ? `${originStop.Description}` : '',
+          Destination: destStop ? `${destStop.Description}` : '',
+          ...getBusOperatingHours(b)
+        };
       });
-      }
-      
-      function getNearbyBusStops(limit = 20) {
-        if (!userPosition) return [];
-        return busStops.map(bs => {
-          const dist = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
-          return { ...bs, distance: dist };
-        }).sort((a, b) => a.distance - b.distance)
-          .filter(bs => bs.distance <= 500)
-          .slice(0, limit);
-      }
-      
-      function toggleFavorite(busStopCode, bus) {
+    }
+
+    function getNearbyBusStops(limit = 20) {
+      if (!userPosition) return [];
+      return busStops.map(bs => {
+        const dist = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
+        return { ...bs, distance: dist };
+      }).sort((a, b) => a.distance - b.distance)
+        .filter(bs => bs.distance <= 500)
+        .slice(0, limit);
+    }
+
+    function toggleFavorite(busStopCode, bus) {
       const idx = favoriteBuses.findIndex(f => f.BusStopCode === busStopCode && f.bus.ServiceNo === bus.ServiceNo);
       const isFavorite = idx >= 0;
-      
+
       if (isFavorite) {
-      favoriteBuses.splice(idx, 1);
+        favoriteBuses.splice(idx, 1);
       } else {
-      favoriteBuses.push({ BusStopCode: busStopCode, bus });
+        favoriteBuses.push({ BusStopCode: busStopCode, bus });
       }
       saveFavorites();
-      
+
       document.querySelectorAll(`.star[data-bus="${bus.ServiceNo}"][data-stop="${busStopCode}"]`).forEach(star => {
-      if (isFavorite) {
-        star.classList.add('unfilled');
-      } else {
-        star.classList.remove('unfilled');
-      }
+        if (isFavorite) {
+          star.classList.add('unfilled');
+        } else {
+          star.classList.remove('unfilled');
+        }
       });
-      
+
       if (isFavorite) {
-      const favoriteSection = document.getElementById('favoriteSection');
-      const busCards = favoriteSection.querySelectorAll('.busstop-card');
-      
-      busCards.forEach(card => {
-        if (card.dataset.stop === busStopCode) {
-          const busItems = card.querySelectorAll('.bus-item');
-          busItems.forEach(item => {
-            const star = item.querySelector('.star');
-            if (star && star.dataset.bus === bus.ServiceNo) {
-              item.remove();
+        const favoriteSection = document.getElementById('favoriteSection');
+        const busCards = favoriteSection.querySelectorAll('.busstop-card');
+
+        busCards.forEach(card => {
+          if (card.dataset.stop === busStopCode) {
+            const busItems = card.querySelectorAll('.bus-item');
+            busItems.forEach(item => {
+              const star = item.querySelector('.star');
+              if (star && star.dataset.bus === bus.ServiceNo) {
+                item.remove();
+              }
+            });
+
+            const remainingBuses = card.querySelectorAll('.bus-item');
+            if (remainingBuses.length === 0) {
+              card.remove();
             }
-          });
-          
-          const remainingBuses = card.querySelectorAll('.bus-item');
-          if (remainingBuses.length === 0) {
-            card.remove();
           }
+        });
+
+        if (favoriteSection.querySelectorAll('.busstop-card').length === 0) {
+          favoriteSection.innerHTML = '<h3><i class="fas fa-heart"></i> 我的收藏</h3>' +
+            '<div class="busstop-card"><p><i class="far fa-star"></i> 暂无收藏</p></div>';
         }
-      });
-      
-      if (favoriteSection.querySelectorAll('.busstop-card').length === 0) {
-        favoriteSection.innerHTML = '<h3><i class="fas fa-heart"></i> 我的收藏</h3>'+
-          '<div class="busstop-card"><p><i class="far fa-star"></i> 暂无收藏</p></div>';
-      }
       } else {
-      renderFavorites();
+        renderFavorites();
       }
-      }
-      
-      function getArrivalTimes(service) {
+    }
+
+    function getArrivalTimes(service) {
       const arrivalTimes = [];
-      
+
       if (service) {
-      [service.NextBus, service.NextBus2, service.NextBus3].forEach(nextBus => {
-        if (nextBus && nextBus.EstimatedArrival) {
-          const arrivalTime = new Date(nextBus.EstimatedArrival);
-          const now = new Date();
-          const seconds = Math.round((arrivalTime - now) / 1000);
-          
-          if (seconds > 30) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            arrivalTimes.push(`${minutes}分${remainingSeconds}秒`);
-          } else if (seconds > 0) {
-            arrivalTimes.push(`${seconds}秒`);
-          } else {
-            arrivalTimes.push('已离开');
+        [service.NextBus, service.NextBus2, service.NextBus3].forEach(nextBus => {
+          if (nextBus && nextBus.EstimatedArrival) {
+            const arrivalTime = new Date(nextBus.EstimatedArrival);
+            const now = new Date();
+            const seconds = Math.round((arrivalTime - now) / 1000);
+
+            if (seconds > 30) {
+              const minutes = Math.floor(seconds / 60);
+              const remainingSeconds = seconds % 60;
+              arrivalTimes.push(`${minutes}分${remainingSeconds}秒`);
+            } else if (seconds > 0) {
+              arrivalTimes.push(`${seconds}秒`);
+            } else {
+              arrivalTimes.push('已离开');
+            }
           }
-        }
-      });
+        });
       }
-      
+
       while (arrivalTimes.length < 3) {
-      arrivalTimes.push('');
+        arrivalTimes.push('');
       }
-      
+
       return arrivalTimes;
-      }
-      
-      function getBusOperatingHours(busData) {
+    }
+
+    function getBusOperatingHours(busData) {
       return {
-      WD_FirstBus: busData?.WD_FirstBus || '',
-      WD_LastBus: busData?.WD_LastBus || '',
-      SAT_FirstBus: busData?.SAT_FirstBus || '',
-      SAT_LastBus: busData?.SAT_LastBus || '',
-      SUN_FirstBus: busData?.SUN_FirstBus || '',
-      SUN_LastBus: busData?.SUN_LastBus || ''
+        WD_FirstBus: busData?.WD_FirstBus || '',
+        WD_LastBus: busData?.WD_LastBus || '',
+        SAT_FirstBus: busData?.SAT_FirstBus || '',
+        SAT_LastBus: busData?.SAT_LastBus || '',
+        SUN_FirstBus: busData?.SUN_FirstBus || '',
+        SUN_LastBus: busData?.SUN_LastBus || ''
       };
-      }
-      
-      async function refreshTimesOnly() {
+    }
+
+    async function refreshTimesOnly() {
       const allCards = document.querySelectorAll('.busstop-card');
-      
+
       for (const card of allCards) {
-      const busItems = card.querySelectorAll('.bus-item');
-      const header = card.querySelector('.busstop-header p');
-      if (!header) continue;
-      
-      const headerText = header.textContent;
-      const busStopCodeMatch = headerText.match(/(\d+)/);
-      if (!busStopCodeMatch) continue;
-      
-      const busStopCode = busStopCodeMatch[0];
-      const arrivalData = await getBusArrivalTimes(busStopCode);
-      
-      busItems.forEach(busDiv => {
-        const span = busDiv.querySelector('span:first-child');
-        const starEl = busDiv.querySelector('.star');
-        if (!span || !starEl) return;
-      
-        const busNo = starEl.dataset.bus;
-        const busStopCode = starEl.dataset.stop;
-        if (!busNo || !busStopCode) return;
-        const busInfo = getNextBuses(busStopCode).find(b => b.ServiceNo === busNo);
-        if (!busInfo) return;
-        const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
-        const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
-      
-        span.innerHTML = `
+        const busItems = card.querySelectorAll('.bus-item');
+        const header = card.querySelector('.busstop-header p');
+        if (!header) continue;
+
+        const headerText = header.textContent;
+        const busStopCodeMatch = headerText.match(/(\d+)/);
+        if (!busStopCodeMatch) continue;
+
+        const busStopCode = busStopCodeMatch[0];
+        const arrivalData = await getBusArrivalTimes(busStopCode);
+
+        busItems.forEach(busDiv => {
+          const span = busDiv.querySelector('span:first-child');
+          const starEl = busDiv.querySelector('.star');
+          if (!span || !starEl) return;
+
+          const busNo = starEl.dataset.bus;
+          const busStopCode = starEl.dataset.stop;
+          if (!busNo || !busStopCode) return;
+          const busInfo = getNextBuses(busStopCode).find(b => b.ServiceNo === busNo);
+          if (!busInfo) return;
+          const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
+          const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
+
+          span.innerHTML = `
           <i class="fas fa-bus icon-lg"></i> 
           <span class="text-bold-lg">${busNo}</span> 
           <span class="text-time-main">
@@ -456,77 +595,77 @@
             ${arrivalText2} ${arrivalText3}
           </span>
         `;
-      });
+        });
       }
-      }
-      
-      async function updateBusTimes(card, busStopCode) {
-        const arrivalData = await getBusArrivalTimes(busStopCode);
-        const busItems = card.querySelectorAll('.bus-item');
-      
-        busItems.forEach(busItem => {
-          const busText = busItem.querySelector('span');
-          const busNo = busText.textContent.split(' ')[0];
-      
-          const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
-      const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
-      
-          busText.innerHTML = `
+    }
+
+    async function updateBusTimes(card, busStopCode) {
+      const arrivalData = await getBusArrivalTimes(busStopCode);
+      const busItems = card.querySelectorAll('.bus-item');
+
+      busItems.forEach(busItem => {
+        const busText = busItem.querySelector('span');
+        const busNo = busText.textContent.split(' ')[0];
+
+        const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
+        const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
+
+        busText.innerHTML = `
       <i class="fas fa-bus"></i> ${busNo} ${arrivalText1}<br>
       <i class="fas fa-arrow-circle-right"></i> ${bus.Destination} ${arrivalText2} ${arrivalText3}
       `;
-        });
+      });
+    }
+
+    async function renderAllSections() {
+
+      if (currentView === 'default') {
+        await renderFavorites();
+        await renderNearbyStops();
+        document.getElementById('favoriteSection').style.display = 'block';
+        document.getElementById('nearbySection').style.display = 'block';
+        document.getElementById('searchSection').style.display = 'none';
+      } else {
+        document.getElementById('favoriteSection').style.display = 'none';
+        document.getElementById('nearbySection').style.display = 'none';
+        document.getElementById('searchSection').style.display = 'block';
       }
-      
-      async function renderAllSections() {
-      
-        if (currentView === 'default') {
-          await renderFavorites();
-          await renderNearbyStops();
-          document.getElementById('favoriteSection').style.display = 'block';
-          document.getElementById('nearbySection').style.display = 'block';
-          document.getElementById('searchSection').style.display = 'none';
-        } else {
-          document.getElementById('favoriteSection').style.display = 'none';
-          document.getElementById('nearbySection').style.display = 'none';
-          document.getElementById('searchSection').style.display = 'block';
-        }
-      }
-      
-      async function renderFavorites() {
+    }
+
+    async function renderFavorites() {
       const section = document.getElementById('favoriteSection');
       section.innerHTML = '<h3><i class="fas fa-heart"></i> 我的收藏</h3>';
-      
+
       if (favoriteBuses.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'busstop-card';
-      empty.innerHTML = '<p><i class="far fa-star"></i> 暂无收藏</p>';
-      section.appendChild(empty);
-      return;
+        const empty = document.createElement('div');
+        empty.className = 'busstop-card';
+        empty.innerHTML = '<p><i class="far fa-star"></i> 暂无收藏</p>';
+        section.appendChild(empty);
+        return;
       }
-      
+
       const grouped = {};
       favoriteBuses.forEach(f => {
-      if (!grouped[f.BusStopCode]) grouped[f.BusStopCode] = [];
-      grouped[f.BusStopCode].push(f.bus);
+        if (!grouped[f.BusStopCode]) grouped[f.BusStopCode] = [];
+        grouped[f.BusStopCode].push(f.bus);
       });
-      
+
       for (const stopCode of Object.keys(grouped)) {
-      const bs = busStops.find(b => b.BusStopCode === stopCode);
-      if (!bs) continue;
-      
-      let distance = null;
-      if (userPosition) {
-        distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
-        //if (distance > 1000) continue;
-      }
-      
-      const distanceText = distance ? `${Math.round(distance)}m` : '';
-      const card = document.createElement('div');
-      card.className = 'busstop-card';
-      card.dataset.stop = stopCode; 
-      
-      card.innerHTML = `
+        const bs = busStops.find(b => b.BusStopCode === stopCode);
+        if (!bs) continue;
+
+        let distance = null;
+        if (userPosition) {
+          distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
+          //if (distance > 1000) continue;
+        }
+
+        const distanceText = distance ? `${Math.round(distance)}m` : '';
+        const card = document.createElement('div');
+        card.className = 'busstop-card';
+        card.dataset.stop = stopCode;
+
+        card.innerHTML = `
         <div class="busstop-header">
           <h3>
             <i class="fas fa-directions icon-lg"></i> 
@@ -543,45 +682,45 @@
         <div class="separator"></div>
         <div class="bus-list show"></div>
       `;
-      
-      section.appendChild(card);
-      const listDiv = card.querySelector('.bus-list');
-      
-      grouped[stopCode].forEach(bus => {
-        const busDiv = document.createElement('div');
-        busDiv.className = 'bus-item';
-        
-        busDiv.innerHTML = `
+
+        section.appendChild(card);
+        const listDiv = card.querySelector('.bus-list');
+
+        grouped[stopCode].forEach(bus => {
+          const busDiv = document.createElement('div');
+          busDiv.className = 'bus-item';
+
+          busDiv.innerHTML = `
           <span>
             <i class="fas fa-bus"></i> ${bus.ServiceNo}<br>
             <i class="fas fa-arrow-circle-right"></i> ${bus.Destination}
           </span>
           <span class="star" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
         `;
-        
-        listDiv.appendChild(busDiv);
-        
-        busDiv.querySelector('.star').onclick = e => {
-          e.stopPropagation();
-          toggleFavorite(bs.BusStopCode, bus);
-        };
-        
-        busDiv.onclick = () => showBusModal(bus);
-      });
-      
-      (async (listDiv, stopCode) => {
-        const arrivalData = await getBusArrivalTimes(stopCode);
-        listDiv.querySelectorAll('.bus-item').forEach(busDiv => {
-          const starEl = busDiv.querySelector('.star');
-          const serviceNo = starEl.dataset.bus;
-          const bus = grouped[stopCode].find(b => b.ServiceNo === serviceNo);
-          if (!bus) return;
-      
-          const service = arrivalData.Services.find(s => s.ServiceNo === serviceNo);
-          const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
-      
-          const span = busDiv.querySelector('span');
-          span.innerHTML = `
+
+          listDiv.appendChild(busDiv);
+
+          busDiv.querySelector('.star').onclick = e => {
+            e.stopPropagation();
+            toggleFavorite(bs.BusStopCode, bus);
+          };
+
+          busDiv.onclick = () => showBusModal(bus);
+        });
+
+        (async (listDiv, stopCode) => {
+          const arrivalData = await getBusArrivalTimes(stopCode);
+          listDiv.querySelectorAll('.bus-item').forEach(busDiv => {
+            const starEl = busDiv.querySelector('.star');
+            const serviceNo = starEl.dataset.bus;
+            const bus = grouped[stopCode].find(b => b.ServiceNo === serviceNo);
+            if (!bus) return;
+
+            const service = arrivalData.Services.find(s => s.ServiceNo === serviceNo);
+            const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
+
+            const span = busDiv.querySelector('span');
+            span.innerHTML = `
             <i class="fas fa-bus icon-lg"></i> 
             <span class="text-bold-lg">${serviceNo}</span> 
             <span class="text-time-main">
@@ -594,33 +733,33 @@
               ${arrivalText2} ${arrivalText3}
             </span>
           `;
-        });
-      })(listDiv, stopCode);
+          });
+        })(listDiv, stopCode);
       }
-      }
-      
-      async function renderNearbyStops() {
+    }
+
+    async function renderNearbyStops() {
       const section = document.getElementById('nearbySection');
       section.innerHTML = '<h3><i class="fas fa-map-marker-alt"></i> 附近巴士</h3>';
       const stops = getNearbyBusStops();
       if (stops.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'busstop-card';
-      empty.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> 无法获取位置信息或500米内没有巴士站</p>';
-      section.appendChild(empty);
-      return;
+        const empty = document.createElement('div');
+        empty.className = 'busstop-card';
+        empty.innerHTML = '<p><i class="fas fa-exclamation-triangle"></i> 无法获取位置信息或500米内没有巴士站</p>';
+        section.appendChild(empty);
+        return;
       }
-      
+
       for (const bs of stops) {
-      const card = document.createElement('div');
-      card.className = 'busstop-card';
-      let buses = getNextBuses(bs.BusStopCode);
-      const favBuses = favoriteBuses.filter(f => f.BusStopCode === bs.BusStopCode).map(f => f.bus);
-      const otherBuses = buses.filter(b => !favBuses.some(f => f.ServiceNo === b.ServiceNo));
-      buses = [...favBuses, ...otherBuses];
-      const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
-      
-      card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = 'busstop-card';
+        let buses = getNextBuses(bs.BusStopCode);
+        const favBuses = favoriteBuses.filter(f => f.BusStopCode === bs.BusStopCode).map(f => f.bus);
+        const otherBuses = buses.filter(b => !favBuses.some(f => f.ServiceNo === b.ServiceNo));
+        buses = [...favBuses, ...otherBuses];
+        const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
+
+        card.innerHTML = `
         <div class="busstop-header">
           <h3>
             <i class="fas fa-directions icon-lg"></i> 
@@ -638,17 +777,17 @@
         <div class="separator"></div>
         <div class="bus-list"></div>
       `;
-      const listDiv = card.querySelector('.bus-list');
-      
-      buses.forEach(bus => {
-        const isFav = favoriteBuses.some(f => f.BusStopCode === bs.BusStopCode && f.bus.ServiceNo === bus.ServiceNo);
-        const busDiv = document.createElement('div');
-        busDiv.className = 'bus-item';
-      
-        const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
-        const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
-      
-        busDiv.innerHTML = `
+        const listDiv = card.querySelector('.bus-list');
+
+        buses.forEach(bus => {
+          const isFav = favoriteBuses.some(f => f.BusStopCode === bs.BusStopCode && f.bus.ServiceNo === bus.ServiceNo);
+          const busDiv = document.createElement('div');
+          busDiv.className = 'bus-item';
+
+          const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
+          const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
+
+          busDiv.innerHTML = `
           <span>
             <i class="fas fa-bus icon-lg"></i> 
             <span class="text-bold-lg">${bus.ServiceNo}</span> 
@@ -662,103 +801,103 @@
           </span>
           <span class="star ${isFav ? '' : 'unfilled'}" data-bus="${bus.ServiceNo}" data-stop="${bs.BusStopCode}">&#9733;</span>
         `;
-        listDiv.appendChild(busDiv);
-        busDiv.querySelector('.star').onclick = e => {
-          e.stopPropagation();
-          toggleFavorite(bs.BusStopCode, bus);
-        };
-        busDiv.onclick = () => showBusModal(bus);
-      });
-      
-      const header = card.querySelector('.busstop-header');
-      header.onclick = () => {
-        listDiv.classList.toggle('show');
-        const separator = card.querySelector('.separator');
-        separator.style.display = listDiv.classList.contains('show') ? 'block' : 'none';
-      };
-      
-      section.appendChild(card);
-      }
-      }
-      
-      function showBusModal(bus) {
-        const modal = document.getElementById('busModal');
-        document.getElementById('modalBusNo').innerHTML = `<i class="fas fa-bus"></i> ${bus.ServiceNo}`;
-        const tabs = document.getElementById('modalTabs');
-        const contents = document.getElementById('modalTabContents');
-        tabs.innerHTML = '';
-        contents.innerHTML = '';
-      
-        const tab1 = document.createElement('button');
-        tab1.innerHTML = '<i class="fas fa-clock"></i> 营运时间'; 
-        const content1 = document.createElement('div');
-        content1.className = 'tab-content';
-        content1.innerHTML = renderOpHours(bus);
-        tabs.appendChild(tab1);
-        contents.appendChild(content1);
-      
-        const tab2 = document.createElement('button');
-        tab2.innerHTML = '<i class="fas fa-route"></i> 路线图'; 
-        const content2 = document.createElement('div');
-        content2.className = 'tab-content';
-        content2.innerHTML = renderRouteMap(bus);
-        tabs.appendChild(tab2);
-        contents.appendChild(content2);
-      
-        [tab1, tab2].forEach((btn, idx) => {
-          btn.onclick = () => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            contents.children[idx].classList.add('active');
+          listDiv.appendChild(busDiv);
+          busDiv.querySelector('.star').onclick = e => {
+            e.stopPropagation();
+            toggleFavorite(bs.BusStopCode, bus);
           };
+          busDiv.onclick = () => showBusModal(bus);
         });
-      
-        tab1.click();
-        modal.style.display = 'flex';
+
+        const header = card.querySelector('.busstop-header');
+        header.onclick = () => {
+          listDiv.classList.toggle('show');
+          const separator = card.querySelector('.separator');
+          separator.style.display = listDiv.classList.contains('show') ? 'block' : 'none';
+        };
+
+        section.appendChild(card);
       }
-      
-      function renderOpHours(bus) {
-        return `<table class="op-table">
+    }
+
+    function showBusModal(bus) {
+      const modal = document.getElementById('busModal');
+      document.getElementById('modalBusNo').innerHTML = `<i class="fas fa-bus"></i> ${bus.ServiceNo}`;
+      const tabs = document.getElementById('modalTabs');
+      const contents = document.getElementById('modalTabContents');
+      tabs.innerHTML = '';
+      contents.innerHTML = '';
+
+      const tab1 = document.createElement('button');
+      tab1.innerHTML = '<i class="fas fa-clock"></i> 营运时间';
+      const content1 = document.createElement('div');
+      content1.className = 'tab-content';
+      content1.innerHTML = renderOpHours(bus);
+      tabs.appendChild(tab1);
+      contents.appendChild(content1);
+
+      const tab2 = document.createElement('button');
+      tab2.innerHTML = '<i class="fas fa-route"></i> 路线图';
+      const content2 = document.createElement('div');
+      content2.className = 'tab-content';
+      content2.innerHTML = renderRouteMap(bus);
+      tabs.appendChild(tab2);
+      contents.appendChild(content2);
+
+      [tab1, tab2].forEach((btn, idx) => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          contents.children[idx].classList.add('active');
+        };
+      });
+
+      tab1.click();
+      modal.style.display = 'flex';
+    }
+
+    function renderOpHours(bus) {
+      return `<table class="op-table">
       <tr><th>类型</th><th>首班车</th><th>末班车</th></tr>
       <tr><td>工作日</td><td>${bus.WD_FirstBus}</td><td>${bus.WD_LastBus}</td></tr>
       <tr><td>星期六</td><td>${bus.SAT_FirstBus}</td><td>${bus.SAT_LastBus}</td></tr>
       <tr><td>星期日/公共假日</td><td>${bus.SUN_FirstBus}</td><td>${bus.SUN_LastBus}</td></tr>
       </table>`;
-      }
-      
-      function renderRouteMap(bus) {
+    }
+
+    function renderRouteMap(bus) {
       const matchedRoutes = busRoutes
-      .filter(route => route.ServiceNo === bus.ServiceNo && route.Direction === bus.Direction)
-      .sort((a, b) => a.StopSequence - b.StopSequence);
-      
+        .filter(route => route.ServiceNo === bus.ServiceNo && route.Direction === bus.Direction)
+        .sort((a, b) => a.StopSequence - b.StopSequence);
+
       let nearestStopCode = null;
       if (userPosition) {
-      let minDist = Infinity;
-      matchedRoutes.forEach(route => {
-        const stop = busStops.find(bs => bs.BusStopCode === route.BusStopCode);
-        if (!stop) return;
-        const dist = haversine(userPosition.lat, userPosition.lng, stop.Latitude, stop.Longitude);
-        if (dist < minDist && dist <= 1000) {
-          minDist = dist;
-          nearestStopCode = stop.BusStopCode;
-        }
-      });
+        let minDist = Infinity;
+        matchedRoutes.forEach(route => {
+          const stop = busStops.find(bs => bs.BusStopCode === route.BusStopCode);
+          if (!stop) return;
+          const dist = haversine(userPosition.lat, userPosition.lng, stop.Latitude, stop.Longitude);
+          if (dist < minDist && dist <= 1000) {
+            minDist = dist;
+            nearestStopCode = stop.BusStopCode;
+          }
+        });
       }
-      
+
       const validRoutes = matchedRoutes.filter(route => {
-      const stop = busStops.find(bs => bs.BusStopCode === route.BusStopCode);
-      return stop !== undefined;
+        const stop = busStops.find(bs => bs.BusStopCode === route.BusStopCode);
+        return stop !== undefined;
       });
-      
+
       if (validRoutes.length === 0) {
-      return `<div class="route-map"><p>暂无路线信息</p></div>`;
+        return `<div class="route-map"><p>暂无路线信息</p></div>`;
       }
-      
+
       return `<div class="route-map">${validRoutes.map((route, i) => {
-      const stop = busStops.find(bs => bs.BusStopCode === route.BusStopCode);
-      const isCurrentStop = stop.BusStopCode === nearestStopCode;
-      const stopEmoji = isCurrentStop ? "🔴 " : "🔵 ";
-      
-      return `<div class="route-stop">
+        const stop = busStops.find(bs => bs.BusStopCode === route.BusStopCode);
+        const isCurrentStop = stop.BusStopCode === nearestStopCode;
+        const stopEmoji = isCurrentStop ? "🔴 " : "🔵 ";
+
+        return `<div class="route-stop">
         <div class="route-text">
           <div class="route-info">
             ${stopEmoji}${stop.Description} (${stop.BusStopCode})
@@ -770,202 +909,202 @@
         </div>
       </div>`;
       }).join('')}</div>`;
-      }
-      
-      let autoRefreshStops = new Set(); 
-      
-      document.addEventListener("click", async e => {
+    }
+
+    let autoRefreshStops = new Set();
+
+    document.addEventListener("click", async e => {
       const refreshBtn = e.target.closest('.route-refresh');
       if (!refreshBtn) return;
-      
+
       const stopCode = refreshBtn.dataset.stop;
       const busNo = refreshBtn.dataset.bus;
       const direction = parseInt(refreshBtn.dataset.direction);
-      
+
       if (autoRefreshStops.has(stopCode)) {
-      autoRefreshStops.delete(stopCode);
-      refreshBtn.classList.remove('loading');
+        autoRefreshStops.delete(stopCode);
+        refreshBtn.classList.remove('loading');
       } else {
-      autoRefreshStops.add(stopCode);
-      refreshBtn.classList.add('loading');
+        autoRefreshStops.add(stopCode);
+        refreshBtn.classList.add('loading');
       }
-      
+
       await refreshSingleStop(stopCode, busNo, refreshBtn);
-      });
-      
-      async function refreshSingleStop(stopCode, busNo, refreshBtn) {
+    });
+
+    async function refreshSingleStop(stopCode, busNo, refreshBtn) {
       const timesDiv = document.getElementById(`times-${stopCode}`);
-      
+
       refreshBtn.classList.add('rotate');
       timesDiv.innerHTML = '加载中...';
-      
+
       try {
-      const arrivalData = await getBusArrivalTimes(stopCode);
-      
-      if (arrivalData && arrivalData.Services) {
-        const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
-        let timesHTML = '';
-        if (service) {
-          const arrs = [];
-          [service.NextBus, service.NextBus2, service.NextBus3].forEach(nb => {
-            if (nb && nb.EstimatedArrival) {
-              const mins = Math.round((new Date(nb.EstimatedArrival) - new Date()) / 60000);
-              arrs.push(mins > 0 ? `${mins}分钟` : '即将到达');
-            }
-          });
-          timesHTML = `<span class="bus-number">${busNo}: </span>${arrs.join(', ')}`;
+        const arrivalData = await getBusArrivalTimes(stopCode);
+
+        if (arrivalData && arrivalData.Services) {
+          const service = arrivalData.Services.find(s => s.ServiceNo === busNo);
+          let timesHTML = '';
+          if (service) {
+            const arrs = [];
+            [service.NextBus, service.NextBus2, service.NextBus3].forEach(nb => {
+              if (nb && nb.EstimatedArrival) {
+                const mins = Math.round((new Date(nb.EstimatedArrival) - new Date()) / 60000);
+                arrs.push(mins > 0 ? `${mins}分钟` : '即将到达');
+              }
+            });
+            timesHTML = `<span class="bus-number">${busNo}: </span>${arrs.join(', ')}`;
+          }
+          timesDiv.innerHTML = timesHTML;
+        } else {
+          timesDiv.innerHTML = '暂无巴士信息';
         }
-        timesDiv.innerHTML = timesHTML;
-      } else {
-        timesDiv.innerHTML = '暂无巴士信息';
-      }
       } catch (error) {
-      timesDiv.innerHTML = '加载失败';
+        timesDiv.innerHTML = '加载失败';
       } finally {
-      setTimeout(() => {
-        refreshBtn.classList.remove('rotate');
-      }, 500);
+        setTimeout(() => {
+          refreshBtn.classList.remove('rotate');
+        }, 500);
       }
-      }
-      
-      async function refreshAutoRefreshStops() {
+    }
+
+    async function refreshAutoRefreshStops() {
       for (const stopCode of autoRefreshStops) {
-      const refreshBtn = document.querySelector(`.route-refresh[data-stop="${stopCode}"]`);
-      if (refreshBtn) {
-        const busNo = refreshBtn.dataset.bus;
-        await refreshSingleStop(stopCode, busNo, refreshBtn);
-      }
-      }
-      }
-      
-      document.getElementById('modalClose').onclick = () => {
-        document.getElementById('busModal').style.display = 'none';
-      };
-      
-      document.getElementById('searchBtn').onclick = async () => {
-        const val = searchInput.value.trim();
-        if (!val) {
-          currentView = 'default';
-          renderAllSections();
-          return;
+        const refreshBtn = document.querySelector(`.route-refresh[data-stop="${stopCode}"]`);
+        if (refreshBtn) {
+          const busNo = refreshBtn.dataset.bus;
+          await refreshSingleStop(stopCode, busNo, refreshBtn);
         }
-        currentView = 'search';
-        searchInput.dispatchEvent(new Event('input'));
-      };
-      
-      async function renderSearchBuses(busCode, routes) {
-        const section = document.getElementById('searchSection');
-        section.innerHTML = '<h3><i class="fas fa-search"></i>搜索结果</h3>';
-        if (routes.length === 0) {
-          const empty = document.createElement('div');
-          empty.className = 'busstop-card';
-          empty.innerHTML = '<p>没有找到相关结果</p>';
-          section.appendChild(empty);
-          return;
-        }
-      
-        const directions = [...new Set(routes.map(r => r.Direction))];
-      
-        for (const direction of directions) {
-          const svc = busServices.find(s => s.ServiceNo === busCode && s.Direction === direction);
-          const originStop = busStops.find(bs => bs.BusStopCode === svc?.OriginCode);
-          const destStop = busStops.find(bs => bs.BusStopCode === svc?.DestinationCode);
-          const originName = originStop ? originStop.Description : '未知起点';
-          const destName = destStop ? destStop.Description : '未知终点';
-          const card = document.createElement('div');
-          card.className = 'busstop-card';
-          card.innerHTML = `<div class="busstop-header">
+      }
+    }
+
+    document.getElementById('modalClose').onclick = () => {
+      document.getElementById('busModal').style.display = 'none';
+    };
+
+    document.getElementById('searchBtn').onclick = async () => {
+      const val = searchInput.value.trim();
+      if (!val) {
+        currentView = 'default';
+        renderAllSections();
+        return;
+      }
+      currentView = 'search';
+      searchInput.dispatchEvent(new Event('input'));
+    };
+
+    async function renderSearchBuses(busCode, routes) {
+      const section = document.getElementById('searchSection');
+      section.innerHTML = '<h3><i class="fas fa-search"></i>搜索结果</h3>';
+      if (routes.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'busstop-card';
+        empty.innerHTML = '<p>没有找到相关结果</p>';
+        section.appendChild(empty);
+        return;
+      }
+
+      const directions = [...new Set(routes.map(r => r.Direction))];
+
+      for (const direction of directions) {
+        const svc = busServices.find(s => s.ServiceNo === busCode && s.Direction === direction);
+        const originStop = busStops.find(bs => bs.BusStopCode === svc?.OriginCode);
+        const destStop = busStops.find(bs => bs.BusStopCode === svc?.DestinationCode);
+        const originName = originStop ? originStop.Description : '未知起点';
+        const destName = destStop ? destStop.Description : '未知终点';
+        const card = document.createElement('div');
+        card.className = 'busstop-card';
+        card.innerHTML = `<div class="busstop-header">
       <h3><i class="fas fa-bus"></i> ${busCode}<br>
       <i class="fas fa-map-marker-alt"></i> ${originName} <i class="fas fa-long-arrow-alt-right"></i> ${destName}</h3>
       </div>
       <div class="separator"></div><div class="bus-list show"></div>`;
-      
-          const listDiv = card.querySelector('.bus-list');
-          const busDiv = document.createElement('div');
-          busDiv.className = 'bus-item';
-          busDiv.innerHTML = `<span>点击查看路线图</span>`;
-          busDiv.onclick = () => {
-            const originStopData = busRoutes.find(r => r.ServiceNo === busCode && r.Direction === direction && r.StopSequence === 1);
-            const tempBus = {
-              ServiceNo: busCode,
-              Direction: direction,
-              OriginName: originName,
-              DestinationName: destName,
-              ...getBusOperatingHours(originStopData)
-            };
-            showBusModal(tempBus);
+
+        const listDiv = card.querySelector('.bus-list');
+        const busDiv = document.createElement('div');
+        busDiv.className = 'bus-item';
+        busDiv.innerHTML = `<span>点击查看路线图</span>`;
+        busDiv.onclick = () => {
+          const originStopData = busRoutes.find(r => r.ServiceNo === busCode && r.Direction === direction && r.StopSequence === 1);
+          const tempBus = {
+            ServiceNo: busCode,
+            Direction: direction,
+            OriginName: originName,
+            DestinationName: destName,
+            ...getBusOperatingHours(originStopData)
           };
-          listDiv.appendChild(busDiv);
-      
-          section.appendChild(card);
-        }
+          showBusModal(tempBus);
+        };
+        listDiv.appendChild(busDiv);
+
+        section.appendChild(card);
       }
-      
-      const searchInput = document.getElementById('searchInput');
-      const searchSection = document.getElementById('searchSection');
-      searchInput.addEventListener('input', () => {
-        const val = searchInput.value.trim();
-        if (!val) {
-          searchSection.style.display = 'none';
-          return;
-        }
-      
-        let matches = [];
-        if (/^\d{1,5}$/.test(val)) {
-          matches = busStops.filter(bs => bs.BusStopCode.includes(val) || bs.Description.includes(val));
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const searchSection = document.getElementById('searchSection');
+    searchInput.addEventListener('input', () => {
+      const val = searchInput.value.trim();
+      if (!val) {
+        searchSection.style.display = 'none';
+        return;
+      }
+
+      let matches = [];
+      if (/^\d{1,5}$/.test(val)) {
+        matches = busStops.filter(bs => bs.BusStopCode.includes(val) || bs.Description.includes(val));
+      } else {
+        matches = busServices.filter(svc => svc.ServiceNo.includes(val));
+      }
+
+      let html = '';
+      matches.forEach(m => {
+        if (m.BusStopCode) {
+          html += `<div class="busstop-card" style="cursor:pointer;" data-stop="${m.BusStopCode}">${m.Description} (${m.BusStopCode})</div>`;
         } else {
-          matches = busServices.filter(svc => svc.ServiceNo.includes(val));
+          html += `<div class="busstop-card" style="cursor:pointer;" data-bus="${m.ServiceNo}"> ${m.ServiceNo}</div>`;
         }
-      
-        let html = '';
-        matches.forEach(m => {
-          if (m.BusStopCode) {
-            html += `<div class="busstop-card" style="cursor:pointer;" data-stop="${m.BusStopCode}">${m.Description} (${m.BusStopCode})</div>`;
-          } else {
-            html += `<div class="busstop-card" style="cursor:pointer;" data-bus="${m.ServiceNo}"> ${m.ServiceNo}</div>`;
-          }
-        });
-        searchSection.innerHTML = '<h3><i class="fas fa-search"></i> 搜索结果</h3>' + html;
-        searchSection.style.display = 'block';
-        searchSection.querySelectorAll('.busstop-card').forEach(el => {
-          el.onclick = async () => {
-            if (el.dataset.stop) {
-              const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
-              if (bs) await renderSearchResults([bs]);
-            } else if (el.dataset.bus) {
-              const svc = busServices.find(s => s.ServiceNo === el.dataset.bus);
-              if (svc) {
-                await renderSearchBuses(el.dataset.bus, busRoutes.filter(r => r.ServiceNo === el.dataset.bus));
-              }
-            }
-          };
-        });
       });
-      
-      async function renderSearchResults(stops) {
+      searchSection.innerHTML = '<h3><i class="fas fa-search"></i> 搜索结果</h3>' + html;
+      searchSection.style.display = 'block';
+      searchSection.querySelectorAll('.busstop-card').forEach(el => {
+        el.onclick = async () => {
+          if (el.dataset.stop) {
+            const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
+            if (bs) await renderSearchResults([bs]);
+          } else if (el.dataset.bus) {
+            const svc = busServices.find(s => s.ServiceNo === el.dataset.bus);
+            if (svc) {
+              await renderSearchBuses(el.dataset.bus, busRoutes.filter(r => r.ServiceNo === el.dataset.bus));
+            }
+          }
+        };
+      });
+    });
+
+    async function renderSearchResults(stops) {
       const section = document.getElementById('searchSection');
       section.innerHTML = '<h3><i class="fas fa-search"></i> 搜索结果</h3>';
-      
+
       if (stops.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'busstop-card';
-      empty.innerHTML = '<p>没有找到相关结果</p>';
-      section.appendChild(empty);
-      return;
+        const empty = document.createElement('div');
+        empty.className = 'busstop-card';
+        empty.innerHTML = '<p>没有找到相关结果</p>';
+        section.appendChild(empty);
+        return;
       }
-      
+
       for (const bs of stops) {
-      const card = document.createElement('div');
-      card.className = 'busstop-card';
-      
-      if (userPosition && !bs.distance) {
-        bs.distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
-      }
-      
-      let buses = getNextBuses(bs.BusStopCode);
-      const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
-      
-      card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = 'busstop-card';
+
+        if (userPosition && !bs.distance) {
+          bs.distance = haversine(userPosition.lat, userPosition.lng, bs.Latitude, bs.Longitude);
+        }
+
+        let buses = getNextBuses(bs.BusStopCode);
+        const arrivalData = await getBusArrivalTimes(bs.BusStopCode);
+
+        card.innerHTML = `
         <div class="busstop-header">
           <h3>
             <i class="fas fa-directions icon-lg"></i> 
@@ -983,18 +1122,18 @@
         <div class="separator"></div>
         <div class="bus-list show"></div>
       `;
-      
-      const listDiv = card.querySelector('.bus-list');
-      
-      buses.forEach(bus => {
-        const isFav = favoriteBuses.some(f => f.BusStopCode === bs.BusStopCode && f.bus.ServiceNo === bus.ServiceNo);
-        const busDiv = document.createElement('div');
-        busDiv.className = 'bus-item';
-      
-        const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
-        const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
-      
-        busDiv.innerHTML = `
+
+        const listDiv = card.querySelector('.bus-list');
+
+        buses.forEach(bus => {
+          const isFav = favoriteBuses.some(f => f.BusStopCode === bs.BusStopCode && f.bus.ServiceNo === bus.ServiceNo);
+          const busDiv = document.createElement('div');
+          busDiv.className = 'bus-item';
+
+          const service = arrivalData.Services.find(s => s.ServiceNo === bus.ServiceNo);
+          const [arrivalText1, arrivalText2, arrivalText3] = getArrivalTimes(service);
+
+          busDiv.innerHTML = `
           <span>
             <i class="fas fa-bus icon-lg"></i> 
             <span class="text-bold-lg">${bus.ServiceNo}</span> 
@@ -1012,139 +1151,139 @@
                 data-bus="${bus.ServiceNo}" 
                 data-stop="${bs.BusStopCode}">&#9733;</span>
         `;
-        listDiv.appendChild(busDiv);
-        busDiv.querySelector('.star').onclick = e => {
-          e.stopPropagation();
-          toggleFavorite(bs.BusStopCode, bus);
-        };
-        busDiv.onclick = () => showBusModal(bus);
-      });
-      section.appendChild(card);
+          listDiv.appendChild(busDiv);
+          busDiv.querySelector('.star').onclick = e => {
+            e.stopPropagation();
+            toggleFavorite(bs.BusStopCode, bus);
+          };
+          busDiv.onclick = () => showBusModal(bus);
+        });
+        section.appendChild(card);
       }
+    }
+
+    document.getElementById('refreshBtn').onclick = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          renderAllSections();
+        });
       }
-      
-      document.getElementById('refreshBtn').onclick = () => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(pos => {
-            userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            renderAllSections();
-          });
-        }
-      };
-      
-      function pauseAutoRefresh() {
-        stopAutoRefresh();
+    };
+
+    function pauseAutoRefresh() {
+      stopAutoRefresh();
+    }
+
+    function resumeAutoRefresh() {
+      if (!refreshInterval) startAutoRefresh();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+      if (this.value.trim() === '') {
+        currentView = 'default';
+        resumeAutoRefresh();
+      } else {
+        currentView = 'search';
+        pauseAutoRefresh();
       }
-      
-      function resumeAutoRefresh() {
-        if (!refreshInterval) startAutoRefresh();
-      }
-      
-      document.getElementById('searchInput').addEventListener('input', function () {
-        if (this.value.trim() === '') {
-          currentView = 'default';
-          resumeAutoRefresh();
-        } else {
-          currentView = 'search';
-          pauseAutoRefresh();
-        }
-      });
-      
-      function showSearchView() {
-        document.getElementById('favoriteSection').style.display = 'none';
-        document.getElementById('nearbySection').style.display = 'none';
-        searchSection.style.display = 'block';
-      }
-      
-      function showDefaultView() {
-        document.getElementById('favoriteSection').style.display = 'block';
-        document.getElementById('nearbySection').style.display = 'block';
-        searchSection.style.display = 'none';
-      }
-      
-      (async function () {
-        await loadData();
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(pos => {
-            userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            renderAllSections();
-            startAutoRefresh();
-          }, () => {
-            renderAllSections();
-            startAutoRefresh();
-          });
-        } else {
+    });
+
+    function showSearchView() {
+      document.getElementById('favoriteSection').style.display = 'none';
+      document.getElementById('nearbySection').style.display = 'none';
+      searchSection.style.display = 'block';
+    }
+
+    function showDefaultView() {
+      document.getElementById('favoriteSection').style.display = 'block';
+      document.getElementById('nearbySection').style.display = 'block';
+      searchSection.style.display = 'none';
+    }
+
+    (async function () {
+      await loadData();
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          userPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           renderAllSections();
           startAutoRefresh();
-        }
-      
-        let autoRefreshTimer = null;
-        let currentView = 'default';
-        let expandedStopCode = null;
-      
-        function startAutoRefresh() {
-          stopAutoRefresh();
-          autoRefreshTimer = setInterval(async () => {
-            if (currentView === 'default') {
-              refreshTimesOnly();
-            } else if (currentView === 'search-result' && expandedStopCode) {
-      
-              await refreshBusStopTimes(expandedStopCode);
-            }
-      
-      if (autoRefreshStops.size > 0) {
-        await refreshAutoRefreshStops();
-      }
-          }, 10000);
-        }
-      
-        function stopAutoRefresh() {
-          if (autoRefreshTimer) {
-            clearInterval(autoRefreshTimer);
-            autoRefreshTimer = null;
-          }
-        }
-      
-        searchInput.addEventListener('input', async function () {
-          const val = this.value.trim();
-      
-          if (!val) {
-            currentView = 'default';
-            showDefaultView();
-            renderAllSections();
-            expandedStopCode = null;
-            startAutoRefresh();
-          } else {
-            currentView = 'search-input';
-            showSearchView();
-            stopAutoRefresh();
-            await performSearch(val);
-          }
+        }, () => {
+          renderAllSections();
+          startAutoRefresh();
         });
-      
-        async function performSearch(val) {
-          searchSection.innerHTML = '<h3><i class="fas fa-search"></i> 搜索结果</h3>';
-          const busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
-          const stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.includes(val));
-          let html = '';
-          if (busMatches.length) {
-            const uniqueBusNos = [...new Set(busMatches.map(b => b.ServiceNo))];
-            uniqueBusNos.forEach(busNo => {
-              html += `<div class="busstop-card" data-bus="${busNo}">
+      } else {
+        renderAllSections();
+        startAutoRefresh();
+      }
+
+      let autoRefreshTimer = null;
+      let currentView = 'default';
+      let expandedStopCode = null;
+
+      function startAutoRefresh() {
+        stopAutoRefresh();
+        autoRefreshTimer = setInterval(async () => {
+          if (currentView === 'default') {
+            refreshTimesOnly();
+          } else if (currentView === 'search-result' && expandedStopCode) {
+
+            await refreshBusStopTimes(expandedStopCode);
+          }
+
+          if (autoRefreshStops.size > 0) {
+            await refreshAutoRefreshStops();
+          }
+        }, 10000);
+      }
+
+      function stopAutoRefresh() {
+        if (autoRefreshTimer) {
+          clearInterval(autoRefreshTimer);
+          autoRefreshTimer = null;
+        }
+      }
+
+      searchInput.addEventListener('input', async function () {
+        const val = this.value.trim();
+
+        if (!val) {
+          currentView = 'default';
+          showDefaultView();
+          renderAllSections();
+          expandedStopCode = null;
+          startAutoRefresh();
+        } else {
+          currentView = 'search-input';
+          showSearchView();
+          stopAutoRefresh();
+          await performSearch(val);
+        }
+      });
+
+      async function performSearch(val) {
+        searchSection.innerHTML = '<h3><i class="fas fa-search"></i> 搜索结果</h3>';
+        const busMatches = busServices.filter(svc => svc.ServiceNo.startsWith(val));
+        const stopMatches = busStops.filter(bs => bs.BusStopCode.startsWith(val) || bs.Description.includes(val));
+        let html = '';
+        if (busMatches.length) {
+          const uniqueBusNos = [...new Set(busMatches.map(b => b.ServiceNo))];
+          uniqueBusNos.forEach(busNo => {
+            html += `<div class="busstop-card" data-bus="${busNo}">
         <i class="fas fa-bus"></i> ${busNo}
       </div>`;
-            });
-          }
-      
-          if (stopMatches.length) {
-      stopMatches.forEach(s => {
-        let distanceText = '';
-        if (userPosition) {
-          const distance = haversine(userPosition.lat, userPosition.lng, s.Latitude, s.Longitude);
-          distanceText = ` &nbsp;<i class="fas fa-location-arrow icon-sm"></i> <span>${Math.round(distance)}m</span>`;
+          });
         }
-        
-        html += `
+
+        if (stopMatches.length) {
+          stopMatches.forEach(s => {
+            let distanceText = '';
+            if (userPosition) {
+              const distance = haversine(userPosition.lat, userPosition.lng, s.Latitude, s.Longitude);
+              distanceText = ` &nbsp;<i class="fas fa-location-arrow icon-sm"></i> <span>${Math.round(distance)}m</span>`;
+            }
+
+            html += `
           <div class="busstop-card" data-stop="${s.BusStopCode}">
             <div class="busstop-header">
               <h3>
@@ -1160,41 +1299,42 @@
               </p>
             </div>
           </div>`;
-            });
-          }
-      
-          if (!html) {
-            html = '<p>没有找到相关结果</p>';
-          }
-      
-          searchSection.innerHTML += html;
-          currentView = 'search-result';
-          startAutoRefresh();
+          });
         }
-      
-        searchSection.addEventListener('click', async (e) => {
-          const el = e.target.closest('.busstop-card');
-          if (!el) return;
-      
-          if (el.dataset.bus) {
-            expandedStopCode = null;
-            const svc = el.dataset.bus;
-            const routes = busRoutes.filter(r => r.ServiceNo === svc);
-            await renderSearchBuses(svc, routes);
-          } else if (el.dataset.stop) {
-            expandedStopCode = el.dataset.stop;
-            const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
-            if (bs) await renderSearchResults([bs]);
-          }
-        });
-      
-        async function refreshBusStopTimes(stopCode) {
-          const bs = busStops.find(b => b.BusStopCode === stopCode);
-          if (!bs) return;
-          await renderSearchResults([bs]);
+
+        if (!html) {
+          html = '<p>没有找到相关结果</p>';
         }
+
+        searchSection.innerHTML += html;
+        currentView = 'search-result';
         startAutoRefresh();
-      })();
-    </script>
-  </body>
+      }
+
+      searchSection.addEventListener('click', async (e) => {
+        const el = e.target.closest('.busstop-card');
+        if (!el) return;
+
+        if (el.dataset.bus) {
+          expandedStopCode = null;
+          const svc = el.dataset.bus;
+          const routes = busRoutes.filter(r => r.ServiceNo === svc);
+          await renderSearchBuses(svc, routes);
+        } else if (el.dataset.stop) {
+          expandedStopCode = el.dataset.stop;
+          const bs = busStops.find(b => b.BusStopCode === el.dataset.stop);
+          if (bs) await renderSearchResults([bs]);
+        }
+      });
+
+      async function refreshBusStopTimes(stopCode) {
+        const bs = busStops.find(b => b.BusStopCode === stopCode);
+        if (!bs) return;
+        await renderSearchResults([bs]);
+      }
+      startAutoRefresh();
+    })();
+  </script>
+</body>
+
 </html>
