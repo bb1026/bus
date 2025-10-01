@@ -6365,7 +6365,7 @@
     "DestinationCode": "10009",
     "AM_Peak_Freq": "07-09",
     "AM_Offpeak_Freq": "06-14",
-    "PM_Peak_Freq": "08-11",
+    "PM_Peak_Freq": "09-11",
     "PM_Offpeak_Freq": "12-15",
     "LoopDesc": ""
   },
@@ -8352,10 +8352,10 @@
     "Category": "TRUNK",
     "OriginCode": "59009",
     "DestinationCode": "59009",
-    "AM_Peak_Freq": "10-13",
-    "AM_Offpeak_Freq": "11-13",
-    "PM_Peak_Freq": "10-13",
-    "PM_Offpeak_Freq": "11-14",
+    "AM_Peak_Freq": "09-12",
+    "AM_Offpeak_Freq": "09-12",
+    "PM_Peak_Freq": "09-12",
+    "PM_Offpeak_Freq": "12-13",
     "LoopDesc": "Upp Bt Timah Rd"
   },
   {
@@ -8833,10 +8833,10 @@
     "Category": "FEEDER",
     "OriginCode": "59009",
     "DestinationCode": "59009",
-    "AM_Peak_Freq": "08-14",
-    "AM_Offpeak_Freq": "12-15",
-    "PM_Peak_Freq": "08-12",
-    "PM_Offpeak_Freq": "08-16",
+    "AM_Peak_Freq": "05-08",
+    "AM_Offpeak_Freq": "09-12",
+    "PM_Peak_Freq": "05-09",
+    "PM_Offpeak_Freq": "07-14",
     "LoopDesc": "Yishun Ave 1"
   },
   {
