@@ -611,6 +611,32 @@
     "LoopDesc": ""
   },
   {
+    "ServiceNo": "44",
+    "Operator": "GAS",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "69009",
+    "DestinationCode": "95159",
+    "AM_Peak_Freq": "15-15",
+    "AM_Offpeak_Freq": "-",
+    "PM_Peak_Freq": "-",
+    "PM_Offpeak_Freq": "-",
+    "LoopDesc": ""
+  },
+  {
+    "ServiceNo": "44",
+    "Operator": "GAS",
+    "Direction": 2,
+    "Category": "TRUNK",
+    "OriginCode": "95151",
+    "DestinationCode": "69009",
+    "AM_Peak_Freq": "-",
+    "AM_Offpeak_Freq": "-",
+    "PM_Peak_Freq": "15-15",
+    "PM_Offpeak_Freq": "-",
+    "LoopDesc": ""
+  },
+  {
     "ServiceNo": "518",
     "Operator": "GAS",
     "Direction": 1,
@@ -2618,8 +2644,8 @@
     "Direction": 1,
     "Category": "TRUNK",
     "OriginCode": "67009",
-    "DestinationCode": "55039",
-    "AM_Peak_Freq": "66-66",
+    "DestinationCode": "55019",
+    "AM_Peak_Freq": "18-44",
     "AM_Offpeak_Freq": "-",
     "PM_Peak_Freq": "-",
     "PM_Offpeak_Freq": "-",
@@ -3224,19 +3250,6 @@
     "LoopDesc": ""
   },
   {
-    "ServiceNo": "21X",
-    "Operator": "SBST",
-    "Direction": 1,
-    "Category": "TRUNK",
-    "OriginCode": "52499",
-    "DestinationCode": "52499",
-    "AM_Peak_Freq": "09-11",
-    "AM_Offpeak_Freq": "09-15",
-    "PM_Peak_Freq": "10-13",
-    "PM_Offpeak_Freq": "09-11",
-    "LoopDesc": ""
-  },
-  {
     "ServiceNo": "22",
     "Operator": "SBST",
     "Direction": 1,
@@ -3783,19 +3796,6 @@
     "LoopDesc": "Tampines Ave 5"
   },
   {
-    "ServiceNo": "298X",
-    "Operator": "SBST",
-    "Direction": 1,
-    "Category": "FEEDER",
-    "OriginCode": "74009",
-    "DestinationCode": "74009",
-    "AM_Peak_Freq": "09-12",
-    "AM_Offpeak_Freq": "10-13",
-    "PM_Peak_Freq": "10-12",
-    "PM_Offpeak_Freq": "09-10",
-    "LoopDesc": ""
-  },
-  {
     "ServiceNo": "299",
     "Operator": "SBST",
     "Direction": 1,
@@ -4329,6 +4329,32 @@
     "LoopDesc": ""
   },
   {
+    "ServiceNo": "454",
+    "Operator": "SBST",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "74009",
+    "DestinationCode": "74009",
+    "AM_Peak_Freq": "09-12",
+    "AM_Offpeak_Freq": "10-13",
+    "PM_Peak_Freq": "10-12",
+    "PM_Offpeak_Freq": "09-10",
+    "LoopDesc": "Tampines Street 86"
+  },
+  {
+    "ServiceNo": "456",
+    "Operator": "SBST",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "52499",
+    "DestinationCode": "52499",
+    "AM_Peak_Freq": "09-11",
+    "AM_Offpeak_Freq": "07-15",
+    "PM_Peak_Freq": "09-13",
+    "PM_Offpeak_Freq": "09-11",
+    "LoopDesc": ""
+  },
+  {
     "ServiceNo": "45A",
     "Operator": "SBST",
     "Direction": 1,
@@ -4439,10 +4465,10 @@
     "Category": "TRUNK",
     "OriginCode": "53009",
     "DestinationCode": "65009",
-    "AM_Peak_Freq": "07-12",
+    "AM_Peak_Freq": "08-12",
     "AM_Offpeak_Freq": "05-14",
-    "PM_Peak_Freq": "05-15",
-    "PM_Offpeak_Freq": "10-15",
+    "PM_Peak_Freq": "05-14",
+    "PM_Offpeak_Freq": "12-15",
     "LoopDesc": ""
   },
   {
@@ -4454,8 +4480,8 @@
     "DestinationCode": "53009",
     "AM_Peak_Freq": "06-12",
     "AM_Offpeak_Freq": "06-13",
-    "PM_Peak_Freq": "08-10",
-    "PM_Offpeak_Freq": "12-15",
+    "PM_Peak_Freq": "09-11",
+    "PM_Offpeak_Freq": "11-15",
     "LoopDesc": ""
   },
   {
@@ -6454,8 +6480,8 @@
     "Category": "TRUNK",
     "OriginCode": "22009",
     "DestinationCode": "22009",
-    "AM_Peak_Freq": "02-07",
-    "AM_Offpeak_Freq": "04-07",
+    "AM_Peak_Freq": "07-07",
+    "AM_Offpeak_Freq": "06-09",
     "PM_Peak_Freq": "-",
     "PM_Offpeak_Freq": "-",
     "LoopDesc": "Nanyang Dr"
@@ -7174,6 +7200,45 @@
     "PM_Peak_Freq": "-",
     "PM_Offpeak_Freq": "-",
     "LoopDesc": "Old Choa Chu Kang Rd"
+  },
+  {
+    "ServiceNo": "451",
+    "Operator": "SMRT",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "44889",
+    "DestinationCode": "43579",
+    "AM_Peak_Freq": "03-06",
+    "AM_Offpeak_Freq": "03-06",
+    "PM_Peak_Freq": "-",
+    "PM_Offpeak_Freq": "-",
+    "LoopDesc": ""
+  },
+  {
+    "ServiceNo": "451",
+    "Operator": "SMRT",
+    "Direction": 2,
+    "Category": "TRUNK",
+    "OriginCode": "43571",
+    "DestinationCode": "44881",
+    "AM_Peak_Freq": "-",
+    "AM_Offpeak_Freq": "-",
+    "PM_Peak_Freq": "09-12",
+    "PM_Offpeak_Freq": "09-12",
+    "LoopDesc": ""
+  },
+  {
+    "ServiceNo": "455",
+    "Operator": "SMRT",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "45009",
+    "DestinationCode": "45009",
+    "AM_Peak_Freq": "11-12",
+    "AM_Offpeak_Freq": "10-12",
+    "PM_Peak_Freq": "10-12",
+    "PM_Offpeak_Freq": "10",
+    "LoopDesc": "Choa Chu Kang Cres"
   },
   {
     "ServiceNo": "502",
@@ -8034,19 +8099,6 @@
     "LoopDesc": "Choa Chu Kang Cres"
   },
   {
-    "ServiceNo": "979X",
-    "Operator": "SMRT",
-    "Direction": 1,
-    "Category": "EXPRESS",
-    "OriginCode": "45009",
-    "DestinationCode": "45009",
-    "AM_Peak_Freq": "11-12",
-    "AM_Offpeak_Freq": "10-12",
-    "PM_Peak_Freq": "10-12",
-    "PM_Offpeak_Freq": "10",
-    "LoopDesc": "Choa Chu Kang Cres"
-  },
-  {
     "ServiceNo": "982E",
     "Operator": "SMRT",
     "Direction": 1,
@@ -8187,19 +8239,6 @@
     "AM_Offpeak_Freq": "-",
     "PM_Peak_Freq": "-",
     "PM_Offpeak_Freq": "18-19",
-    "LoopDesc": ""
-  },
-  {
-    "ServiceNo": "991C",
-    "Operator": "SMRT",
-    "Direction": 1,
-    "Category": "TRUNK",
-    "OriginCode": "44079",
-    "DestinationCode": "43579",
-    "AM_Peak_Freq": "22-30",
-    "AM_Offpeak_Freq": "-",
-    "PM_Peak_Freq": "-",
-    "PM_Offpeak_Freq": "-",
     "LoopDesc": ""
   },
   {
@@ -8565,6 +8604,58 @@
     "PM_Peak_Freq": "14-15",
     "PM_Offpeak_Freq": "15-23",
     "LoopDesc": "Jln Anak Bt"
+  },
+  {
+    "ServiceNo": "452",
+    "Operator": "TTS",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "41009",
+    "DestinationCode": "42151",
+    "AM_Peak_Freq": "12-15",
+    "AM_Offpeak_Freq": "15-15",
+    "PM_Peak_Freq": "-",
+    "PM_Offpeak_Freq": "-",
+    "LoopDesc": ""
+  },
+  {
+    "ServiceNo": "452",
+    "Operator": "TTS",
+    "Direction": 2,
+    "Category": "TRUNK",
+    "OriginCode": "42151",
+    "DestinationCode": "41009",
+    "AM_Peak_Freq": "-",
+    "AM_Offpeak_Freq": "-",
+    "PM_Peak_Freq": "12-15",
+    "PM_Offpeak_Freq": "12-15",
+    "LoopDesc": ""
+  },
+  {
+    "ServiceNo": "453",
+    "Operator": "TTS",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "41009",
+    "DestinationCode": "43009",
+    "AM_Peak_Freq": "06-10",
+    "AM_Offpeak_Freq": "10-12",
+    "PM_Peak_Freq": "-",
+    "PM_Offpeak_Freq": "-",
+    "LoopDesc": ""
+  },
+  {
+    "ServiceNo": "453",
+    "Operator": "TTS",
+    "Direction": 2,
+    "Category": "TRUNK",
+    "OriginCode": "43009",
+    "DestinationCode": "41009",
+    "AM_Peak_Freq": "-",
+    "AM_Offpeak_Freq": "-",
+    "PM_Peak_Freq": "05-06",
+    "PM_Offpeak_Freq": "05-08",
+    "LoopDesc": ""
   },
   {
     "ServiceNo": "49",
