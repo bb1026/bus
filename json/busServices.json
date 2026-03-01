@@ -2990,6 +2990,19 @@
     "LoopDesc": ""
   },
   {
+    "ServiceNo": "18M",
+    "Operator": "SBST",
+    "Direction": 1,
+    "Category": "TRUNK",
+    "OriginCode": "84599",
+    "DestinationCode": "84591",
+    "AM_Peak_Freq": "15-15",
+    "AM_Offpeak_Freq": "15-15",
+    "PM_Peak_Freq": "15-15",
+    "PM_Offpeak_Freq": "15-15",
+    "LoopDesc": "Tampines St 96"
+  },
+  {
     "ServiceNo": "19",
     "Operator": "SBST",
     "Direction": 1,
@@ -6741,9 +6754,9 @@
     "OriginCode": "22609",
     "DestinationCode": "11379",
     "AM_Peak_Freq": "09-15",
-    "AM_Offpeak_Freq": "09-17",
-    "PM_Peak_Freq": "11-14",
-    "PM_Offpeak_Freq": "13-14",
+    "AM_Offpeak_Freq": "10-16",
+    "PM_Peak_Freq": "10-14",
+    "PM_Offpeak_Freq": "14-14",
     "LoopDesc": ""
   },
   {
@@ -6753,10 +6766,10 @@
     "Category": "TRUNK",
     "OriginCode": "11379",
     "DestinationCode": "22609",
-    "AM_Peak_Freq": "09-14",
-    "AM_Offpeak_Freq": "09-15",
-    "PM_Peak_Freq": "09-18",
-    "PM_Offpeak_Freq": "13-17",
+    "AM_Peak_Freq": "11-15",
+    "AM_Offpeak_Freq": "10-15",
+    "PM_Peak_Freq": "10-15",
+    "PM_Offpeak_Freq": "15-16",
     "LoopDesc": ""
   },
   {
