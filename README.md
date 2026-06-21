@@ -1,12 +1,4 @@
-好，这三个我给你直接做成一套可用方案（README + 美化 + 真切换 + Swagger），你可以直接部署或放 GitHub。
-
-我分 3 部分给你👇（全部可复制）
-
 ⸻
-
-🚀 ① GitHub README 美化版（徽章 + API卡片）
-
-👉 这个是你 GitHub 首页用的 README.md
 
 # 🚌 SG Bus Arrival API
 ![API](https://img.shields.io/badge/API-Real--Time-green)
@@ -20,18 +12,24 @@ Real-time Singapore Bus Arrival API
 https://busapi.0515364.xyz
 
 ---
-## 📡 API Endpoint
-### GET Bus Arrival
+<p align="right">
+  <a href="#english">🇺🇸 English</a> |
+  <a href="#chinese">🇨🇳 中文</a> |
+  <a href="#disclaimer">⚠️ Disclaimer</a>
+</p>
+---
+## 🇺🇸 English
+<h2 id="english"></h2>
+### 📡 Endpoint
 
 GET /busarrival?BusStopCode={BusStopCode}
 
-### Example
+### 📍 Example Request
 
 GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
 
----
-## 📦 Response
-```json id="z2tq9m"
+### 📦 Response
+```json id="z8p3qq"
 {
   "Services": [
     {
@@ -44,9 +42,77 @@ GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
   ]
 }
 
+⚡ Rate Limit
+
+* Recommended: 5–10 seconds per request
+* Avoid high-frequency polling
+* Use client-side caching
+
 ⸻
 
-⚡ Quick Info Card
+🇨🇳 中文
+
+<h2 id="chinese"></h2>
+
+📡 接口
+
+GET /busarrival?BusStopCode={BusStopCode}
+``` id="c1m9zz"
+### 📍 请求示例
+
+GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
+
+### 📦 返回示例
+```json id="w2k9jj"
+{
+  "Services": [
+    {
+      "ServiceNo": "2",
+      "Operator": "GAS",
+      "NextBus": {
+        "EstimatedArrival": "2026-06-21T12:34:56+08:00"
+      }
+    }
+  ]
+}
+
+⚡ 访问建议
+
+* 每 5~10 秒刷新一次
+* 避免高频请求
+* 建议本地缓存结果
+
+⸻
+
+⚠️ Disclaimer
+
+<h2 id="disclaimer"></h2>
+
+English
+
+This API is provided on an “as is” basis without any warranty.
+
+* No guarantee of uptime
+* Response format may change without notice
+* Data depends on upstream providers
+* Service may be modified or discontinued anytime
+* No liability for any losses
+
+⸻
+
+中文
+
+本接口按“现状（As Is）”提供，不提供任何保证。
+
+* 不保证持续可用
+* 返回格式可能变化
+* 数据依赖上游来源
+* 服务可能随时暂停或终止
+* 不承担任何使用风险
+
+⸻
+
+📊 Quick Info
 
 Item	Value
 Base URL	https://busapi.0515364.xyz
@@ -56,156 +122,18 @@ Source	LTA DataMall
 
 ⸻
 
-⏱ Rate Limit
+📡 Data Source
 
-* Recommended: 5–10 seconds interval
-* Use caching on client side
-* Avoid high-frequency polling
+This project uses publicly available transport data from Singapore Land Transport Authority (LTA).
+
+本项目使用新加坡陆路交通管理局（LTA）公开数据。
 
 ⸻
 
-⚠️ Disclaimer
+⚠️ Final Note
 
-This API is provided as-is without warranty.
-Use at your own risk.
+This is an independent project and is not affiliated with LTA Singapore.
+
+本项目为独立项目，与 LTA 无官方关系。
 
 ---
-# 🌍 ② 真·中英文切换按钮（GitHub Pages / Web版）
-👉 ⚠️ 这个必须放在 HTML，不是纯 Markdown 才能用 JS
-### 📄 index.html（直接复制）
-```html id="c3xv2p"
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SG Bus API Docs</title>
-<style>
-body {
-  font-family: system-ui;
-  margin: 40px;
-  line-height: 1.6;
-}
-.lang-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 10px 14px;
-  background: #111;
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.cn { display: none; }
-.en { display: block; }
-</style>
-</head>
-<body>
-<div class="lang-btn" onclick="toggleLang()">中 / EN</div>
-<!-- ENGLISH -->
-<div class="en">
-<h1>🚌 SG Bus Arrival API</h1>
-<p>Real-time Singapore Bus Arrival API</p>
-<h2>Endpoint</h2>
-<code>/busarrival?BusStopCode=01012</code>
-<h2>Example</h2>
-<code>https://busapi.0515364.xyz/busarrival?BusStopCode=01012</code>
-<h2>Rate Limit</h2>
-<ul>
-<li>5–10 seconds interval</li>
-<li>Use caching</li>
-</ul>
-</div>
-<!-- CHINESE -->
-<div class="cn">
-<h1>🚌 新加坡巴士 API</h1>
-<p>实时巴士到站查询接口</p>
-<h2>接口</h2>
-<code>/busarrival?BusStopCode=01012</code>
-<h2>示例</h2>
-<code>https://busapi.0515364.xyz/busarrival?BusStopCode=01012</code>
-<h2>访问建议</h2>
-<ul>
-<li>5–10 秒刷新</li>
-<li>建议缓存</li>
-</ul>
-</div>
-<script>
-function toggleLang() {
-  document.querySelector('.en').style.display =
-    document.querySelector('.en').style.display === 'none' ? 'block' : 'none';
-  document.querySelector('.cn').style.display =
-    document.querySelector('.cn').style.display === 'none' ? 'block' : 'none';
-}
-</script>
-</body>
-</html>
-
-⸻
-
-📊 ③ Swagger UI 文档版（专业API页面）
-
-👉 这个是“开发者级文档页面”，直接可部署
-
-⸻
-
-📄 swagger.html
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>SG Bus API Docs</title>
-<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
-</head>
-<body>
-<div id="swagger-ui"></div>
-<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-<script>
-const ui = SwaggerUIBundle({
-  url: "openapi.json",
-  dom_id: '#swagger-ui'
-});
-</script>
-</body>
-</html>
-
-⸻
-
-📄 openapi.json（核心）
-
-{
-  "openapi": "3.0.0",
-  "info": {
-    "title": "SG Bus Arrival API",
-    "version": "1.0.0",
-    "description": "Real-time Singapore Bus Arrival API"
-  },
-  "servers": [
-    {
-      "url": "https://busapi.0515364.xyz"
-    }
-  ],
-  "paths": {
-    "/busarrival": {
-      "get": {
-        "summary": "Get bus arrival info",
-        "parameters": [
-          {
-            "name": "BusStopCode",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success response"
-          }
-        }
-      }
-    }
-  }
-}
