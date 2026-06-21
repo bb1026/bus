@@ -1,42 +1,37 @@
-# Singapore Bus
-# 每月自动获取LTA最新数据
+好，这三个我给你直接做成一套可用方案（README + 美化 + 真切换 + Swagger），你可以直接部署或放 GitHub。
 
-🚌 SG Bus Arrival API
+我分 3 部分给你👇（全部可复制）
 
-Real-time Singapore Bus Arrival API
+⸻
 
+🚀 ① GitHub README 美化版（徽章 + API卡片）
+
+👉 这个是你 GitHub 首页用的 README.md
+
+# 🚌 SG Bus Arrival API
+![API](https://img.shields.io/badge/API-Real--Time-green)
+![Singapore](https://img.shields.io/badge/Location-Singapore-blue)
+![Status](https://img.shields.io/badge/Status-Active-success)
+Real-time Singapore Bus Arrival API  
 实时新加坡巴士到站查询接口
-
-Base URL
+---
+## 🌐 Base URL
 
 https://busapi.0515364.xyz
 
-⸻
-
-<p align="right">
-  <a href="#english">🇺🇸 English</a> |
-  <a href="#中文">🇨🇳 中文</a> |
-  <a href="#disclaimer">⚠️ Disclaimer</a>
-</p>
-
-⸻
-
-English
-
-Overview
-
-SG Bus Arrival API provides real-time bus arrival information for Singapore bus stops.
-
-Endpoint
+---
+## 📡 API Endpoint
+### GET Bus Arrival
 
 GET /busarrival?BusStopCode={BusStopCode}
 
-Example
+### Example
 
 GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
 
-Response Example
-
+---
+## 📦 Response
+```json id="z2tq9m"
 {
   "Services": [
     {
@@ -49,112 +44,168 @@ Response Example
   ]
 }
 
-Rate Limit
+⸻
 
-Recommended refresh interval:
+⚡ Quick Info Card
 
-* Every 5-10 seconds
-* Avoid excessive requests
-* Client-side caching is recommended
+Item	Value
+Base URL	https://busapi.0515364.xyz
+Format	JSON
+Update	Real-time
+Source	LTA DataMall
 
 ⸻
 
-中文
+⏱ Rate Limit
 
-简介
+* Recommended: 5–10 seconds interval
+* Use caching on client side
+* Avoid high-frequency polling
 
-SG Bus Arrival API 提供新加坡巴士站实时到站信息查询服务。
+⸻
 
-接口地址
+⚠️ Disclaimer
 
-GET /busarrival?BusStopCode={BusStopCode}
+This API is provided as-is without warranty.
+Use at your own risk.
 
-请求示例
+---
+# 🌍 ② 真·中英文切换按钮（GitHub Pages / Web版）
+👉 ⚠️ 这个必须放在 HTML，不是纯 Markdown 才能用 JS
+### 📄 index.html（直接复制）
+```html id="c3xv2p"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SG Bus API Docs</title>
+<style>
+body {
+  font-family: system-ui;
+  margin: 40px;
+  line-height: 1.6;
+}
+.lang-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 14px;
+  background: #111;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.cn { display: none; }
+.en { display: block; }
+</style>
+</head>
+<body>
+<div class="lang-btn" onclick="toggleLang()">中 / EN</div>
+<!-- ENGLISH -->
+<div class="en">
+<h1>🚌 SG Bus Arrival API</h1>
+<p>Real-time Singapore Bus Arrival API</p>
+<h2>Endpoint</h2>
+<code>/busarrival?BusStopCode=01012</code>
+<h2>Example</h2>
+<code>https://busapi.0515364.xyz/busarrival?BusStopCode=01012</code>
+<h2>Rate Limit</h2>
+<ul>
+<li>5–10 seconds interval</li>
+<li>Use caching</li>
+</ul>
+</div>
+<!-- CHINESE -->
+<div class="cn">
+<h1>🚌 新加坡巴士 API</h1>
+<p>实时巴士到站查询接口</p>
+<h2>接口</h2>
+<code>/busarrival?BusStopCode=01012</code>
+<h2>示例</h2>
+<code>https://busapi.0515364.xyz/busarrival?BusStopCode=01012</code>
+<h2>访问建议</h2>
+<ul>
+<li>5–10 秒刷新</li>
+<li>建议缓存</li>
+</ul>
+</div>
+<script>
+function toggleLang() {
+  document.querySelector('.en').style.display =
+    document.querySelector('.en').style.display === 'none' ? 'block' : 'none';
+  document.querySelector('.cn').style.display =
+    document.querySelector('.cn').style.display === 'none' ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
 
-GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
+⸻
 
-返回示例
+📊 ③ Swagger UI 文档版（专业API页面）
+
+👉 这个是“开发者级文档页面”，直接可部署
+
+⸻
+
+📄 swagger.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SG Bus API Docs</title>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+<script>
+const ui = SwaggerUIBundle({
+  url: "openapi.json",
+  dom_id: '#swagger-ui'
+});
+</script>
+</body>
+</html>
+
+⸻
+
+📄 openapi.json（核心）
 
 {
-  "Services": [
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SG Bus Arrival API",
+    "version": "1.0.0",
+    "description": "Real-time Singapore Bus Arrival API"
+  },
+  "servers": [
     {
-      "ServiceNo": "2",
-      "Operator": "GAS",
-      "NextBus": {
-        "EstimatedArrival": "2026-06-21T12:34:56+08:00"
+      "url": "https://busapi.0515364.xyz"
+    }
+  ],
+  "paths": {
+    "/busarrival": {
+      "get": {
+        "summary": "Get bus arrival info",
+        "parameters": [
+          {
+            "name": "BusStopCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success response"
+          }
+        }
       }
     }
-  ]
+  }
 }
-
-访问建议
-
-建议：
-
-* 每 5~10 秒刷新一次
-* 避免高频请求
-* 建议客户端缓存结果
-
-⸻
-
-Disclaimer
-
-English
-
-This API is provided on an “as is” basis without any warranties.
-
-* Availability is not guaranteed.
-* Response format may change without prior notice.
-* Data accuracy depends on upstream data providers.
-* The service may be suspended, modified, rate-limited, or terminated at any time.
-* The API owner shall not be liable for any direct or indirect damages arising from the use of this service.
-
-中文
-
-本接口按“现状（As Is）”提供，不提供任何形式的保证。
-
-* 不保证服务持续可用。
-* 返回格式可能在不提前通知的情况下调整。
-* 数据准确性依赖于上游数据源。
-* 服务可能随时暂停、修改、限流或终止。
-* 因使用本接口导致的任何直接或间接损失，接口提供者不承担责任。
-
-⸻
-
-Data Source / 数据来源
-
-This project uses publicly available transport data provided by the Singapore Land Transport Authority (LTA) through DataMall and related open data services.
-
-本项目使用新加坡陆路交通管理局（LTA）DataMall 及相关开放数据服务提供的公开交通数据。
-
-The data remains the property of its respective providers.
-
-数据版权及所有权归原始数据提供方所有。
-
-⸻
-
-Disclaimer / 免责声明
-
-This project is an independent community project and is not affiliated with, endorsed by, or sponsored by the Land Transport Authority (LTA) of Singapore.
-
-本项目为独立开发项目，与新加坡陆路交通管理局（LTA）不存在任何隶属、合作或官方认可关系。
-
-Bus arrival information and related transport data are obtained from publicly available sources. Accuracy, completeness, and availability of the data are not guaranteed.
-
-巴士到站时间及相关交通数据来源于公开数据源，不保证数据的准确性、完整性及持续可用性。
-
-Service interruptions, delays, missing records, or inaccurate predictions may occur due to upstream data provider issues.
-
-由于上游数据源原因，可能出现服务中断、数据延迟、缺失或预测不准确等情况。
-
-Users should not rely on this service for safety-critical, operational, or commercial decisions.
-
-用户不应将本服务作为安全、运营或商业决策的唯一依据。
-
-The API may be modified, rate-limited, suspended, or discontinued without prior notice.
-
-本接口可能在不事先通知的情况下修改、限流、暂停或终止服务。
-
-This API acts as a community-maintained wrapper around publicly available transport datasets and is intended for educational, personal, and development purposes.
-
-本接口是对公开交通数据的二次封装，主要用于学习、个人项目及开发测试用途。
