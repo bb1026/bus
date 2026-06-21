@@ -33,6 +33,7 @@ GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
     }
   ]
 }
+```
 
 ---
 
