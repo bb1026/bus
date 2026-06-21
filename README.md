@@ -1,8 +1,8 @@
 # 🚌 SG Bus Arrival API
 ![API](https://img.shields.io/badge/API-Real--Time-green)
 ![Singapore](https://img.shields.io/badge/Location-Singapore-blue)
-![Status](https://img.shields.io/badge/Status-Active-success)
-Real-time Singapore Bus Arrival API  
+![Status](https://img.shields.io/badge/Status-Active-success)<br>
+Real-time Singapore Bus Arrival API<br>
 实时新加坡巴士到站查询接口
 ---
 ## 🌐 Base URL
