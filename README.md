@@ -34,7 +34,7 @@ GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
   ]
 }
 
-⸻
+---
 
 ⚡ Rate Limit 使用建议
 
@@ -42,7 +42,7 @@ GET https://busapi.0515364.xyz/busarrival?BusStopCode=01012
 * Avoid high frequency requests / 避免高频请求
 * Use caching / 建议客户端缓存结果
 
-⸻
+---
 
 📊 Quick Info 接口信息
 
@@ -52,7 +52,7 @@ Format 格式	JSON
 Update 更新	Real-time 实时
 Source 数据来源	LTA DataMall
 
-⸻
+---
 
 📡 Data Source 数据来源
 
@@ -62,7 +62,7 @@ This project uses publicly available transport data provided by the Singapore La
 Data remains the property of its respective providers.
 数据版权归原始提供方所有。
 
-⸻
+---
 
 ⚠️ Disclaimer 免责声明
 
@@ -75,7 +75,7 @@ This API is provided on an “as is” basis without any warranties.
 * May be modified or discontinued / 可能随时调整或终止
 * No liability for any losses / 不承担任何损失
 
-⸻
+---
 
 ⚠️ Final Note 最终说明
 
